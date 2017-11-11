@@ -1,0 +1,3524 @@
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.isr1_clk,"ax",%progbits
+  20              		.align	2
+  21              		.global	isr1_clk
+  22              		.thumb
+  23              		.thumb_func
+  24              		.type	isr1_clk, %function
+  25              	isr1_clk:
+  26              	.LFB63:
+  27              		.file 1 "main.c"
+   1:main.c        **** /* ========================================
+   2:main.c        ****     Author: Julian Santos 
+   3:main.c        **** */
+   4:main.c        **** #include "project.h"
+   5:main.c        **** // ********************************************************* Functions firm 
+   6:main.c        **** void initialize();
+   7:main.c        **** 
+   8:main.c        **** // ******************************************************** Var declaration
+   9:main.c        **** uint16 data_QAM; // This would be the data out 
+  10:main.c        **** uint16 tmp;   // Temporal for QAM data
+  11:main.c        **** uint16 N; // It is the N-QAM 4,8,16,32,64,128,256,512,1024
+  12:main.c        **** uint8 nbit; // Number of the bit to be send
+  13:main.c        **** uint8 log2N; // Number of bits used in the N-QAM 2 3 4 5 6 7 8 9 10
+  14:main.c        **** uint8 s; // step size
+  15:main.c        **** uint8 xcoor; // this will be the x coordinate for the cons**
+  16:main.c        **** uint8 ycoor; // this will be the y coordinate for the cons**
+  17:main.c        **** uint8 xlim; // Represent how far the data will be in the x  axis
+  18:main.c        **** uint8 uno;
+  19:main.c        **** 
+  20:main.c        **** // ******************************************************************* ISR clock 
+  21:main.c        **** CY_ISR(isr1_clk){
+  28              		.loc 1 21 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 10B5     		push	{r4, lr}
+  33              		.cfi_def_cfa_offset 8
+  34              		.cfi_offset 4, -8
+  35              		.cfi_offset 14, -4
+  22:main.c        ****    //Send n bit in a serial way
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 2
+
+
+  23:main.c        ****     data_out_Write((data_QAM&(uno<<nbit))>0); 
+  36              		.loc 1 23 0
+  37 0002 1F4B     		ldr	r3, .L7
+  38 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  39 0006 1F4C     		ldr	r4, .L7+4
+  40 0008 2278     		ldrb	r2, [r4]	@ zero_extendqisi2
+  41 000a 9340     		lsls	r3, r3, r2
+  42 000c 1E4A     		ldr	r2, .L7+8
+  43 000e 1288     		ldrh	r2, [r2]
+  44 0010 1A42     		tst	r2, r3
+  45 0012 14BF     		ite	ne
+  46 0014 0120     		movne	r0, #1
+  47 0016 0020     		moveq	r0, #0
+  48 0018 FFF7FEFF 		bl	data_out_Write
+  49              	.LVL0:
+  24:main.c        ****     nbit ++ ;
+  50              		.loc 1 24 0
+  51 001c 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+  52 001e 0133     		adds	r3, r3, #1
+  53 0020 DBB2     		uxtb	r3, r3
+  54 0022 2370     		strb	r3, [r4]
+  25:main.c        ****     if(nbit>(log2N-1)){ // restrict the number of bits to be sent
+  55              		.loc 1 25 0
+  56 0024 194A     		ldr	r2, .L7+12
+  57 0026 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+  58 0028 013A     		subs	r2, r2, #1
+  59 002a 9342     		cmp	r3, r2
+  60 002c 24DD     		ble	.L2
+  26:main.c        ****         nbit = 0;
+  61              		.loc 1 26 0
+  62 002e 0022     		movs	r2, #0
+  63 0030 2270     		strb	r2, [r4]
+  27:main.c        ****         data_QAM++; // this line could be replaced with lecture of sensors
+  64              		.loc 1 27 0
+  65 0032 154A     		ldr	r2, .L7+8
+  66 0034 1388     		ldrh	r3, [r2]
+  67 0036 0133     		adds	r3, r3, #1
+  68 0038 9BB2     		uxth	r3, r3
+  69 003a 1380     		strh	r3, [r2]	@ movhi
+  28:main.c        ****         if(data_QAM > (N-1)){ // restrict the top of the data 
+  70              		.loc 1 28 0
+  71 003c 144A     		ldr	r2, .L7+16
+  72 003e 1288     		ldrh	r2, [r2]
+  73 0040 013A     		subs	r2, r2, #1
+  74 0042 9342     		cmp	r3, r2
+  75 0044 02DD     		ble	.L3
+  29:main.c        ****             data_QAM = 0;
+  76              		.loc 1 29 0
+  77 0046 0022     		movs	r2, #0
+  78 0048 0F4B     		ldr	r3, .L7+8
+  79 004a 1A80     		strh	r2, [r3]	@ movhi
+  80              	.L3:
+  30:main.c        ****         }
+  31:main.c        ****         // here will be the function to calculate xcoor and ycoor
+  32:main.c        ****         xcoor = data_QAM ;
+  81              		.loc 1 32 0
+  82 004c 0E4B     		ldr	r3, .L7+8
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 3
+
+
+  83 004e 1A88     		ldrh	r2, [r3]
+  84 0050 104B     		ldr	r3, .L7+20
+  85 0052 1A70     		strb	r2, [r3]
+  33:main.c        ****         ycoor = 1 ;
+  86              		.loc 1 33 0
+  87 0054 0122     		movs	r2, #1
+  88 0056 104B     		ldr	r3, .L7+24
+  89 0058 1A70     		strb	r2, [r3]
+  34:main.c        ****         
+  35:main.c        ****         while(xcoor > (xlim-1)){
+  90              		.loc 1 35 0
+  91 005a 06E0     		b	.L4
+  92              	.L5:
+  36:main.c        ****             ycoor++;
+  93              		.loc 1 36 0
+  94 005c 0E48     		ldr	r0, .L7+24
+  95 005e 0278     		ldrb	r2, [r0]	@ zero_extendqisi2
+  96 0060 0132     		adds	r2, r2, #1
+  97 0062 0270     		strb	r2, [r0]
+  37:main.c        ****             xcoor = xcoor-xlim;
+  98              		.loc 1 37 0
+  99 0064 5B1A     		subs	r3, r3, r1
+ 100 0066 0B4A     		ldr	r2, .L7+20
+ 101 0068 1370     		strb	r3, [r2]
+ 102              	.L4:
+  35:main.c        ****             ycoor++;
+ 103              		.loc 1 35 0
+ 104 006a 0A4B     		ldr	r3, .L7+20
+ 105 006c 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 106 006e 0B4A     		ldr	r2, .L7+28
+ 107 0070 1178     		ldrb	r1, [r2]	@ zero_extendqisi2
+ 108 0072 4A1E     		subs	r2, r1, #1
+ 109 0074 9342     		cmp	r3, r2
+ 110 0076 F1DC     		bgt	.L5
+ 111              	.L2:
+  38:main.c        ****         }
+  39:main.c        ****     }
+  40:main.c        ****     Pin_in_clk_ClearInterrupt();
+ 112              		.loc 1 40 0
+ 113 0078 FFF7FEFF 		bl	Pin_in_clk_ClearInterrupt
+ 114              	.LVL1:
+ 115 007c 10BD     		pop	{r4, pc}
+ 116              	.L8:
+ 117 007e 00BF     		.align	2
+ 118              	.L7:
+ 119 0080 00000000 		.word	uno
+ 120 0084 00000000 		.word	nbit
+ 121 0088 00000000 		.word	data_QAM
+ 122 008c 00000000 		.word	log2N
+ 123 0090 00000000 		.word	N
+ 124 0094 00000000 		.word	xcoor
+ 125 0098 00000000 		.word	ycoor
+ 126 009c 00000000 		.word	xlim
+ 127              		.cfi_endproc
+ 128              	.LFE63:
+ 129              		.size	isr1_clk, .-isr1_clk
+ 130              		.section	.text.isr2_bl,"ax",%progbits
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 4
+
+
+ 131              		.align	2
+ 132              		.global	isr2_bl
+ 133              		.thumb
+ 134              		.thumb_func
+ 135              		.type	isr2_bl, %function
+ 136              	isr2_bl:
+ 137              	.LFB64:
+  41:main.c        **** }
+  42:main.c        **** 
+  43:main.c        **** // *************************************************************** ISR RX Bluetooth
+  44:main.c        **** CY_ISR(isr2_bl){
+ 138              		.loc 1 44 0
+ 139              		.cfi_startproc
+ 140              		@ args = 0, pretend = 0, frame = 0
+ 141              		@ frame_needed = 0, uses_anonymous_args = 0
+ 142 0000 08B5     		push	{r3, lr}
+ 143              		.cfi_def_cfa_offset 8
+ 144              		.cfi_offset 3, -8
+ 145              		.cfi_offset 14, -4
+  45:main.c        ****     uint8 temp;
+  46:main.c        ****     temp = UART_GetChar();
+ 146              		.loc 1 46 0
+ 147 0002 FFF7FEFF 		bl	UART_GetChar
+ 148              	.LVL2:
+  47:main.c        ****         if(temp>1 && temp<11){ // for make sure that the data is in the ok range
+ 149              		.loc 1 47 0
+ 150 0006 831E     		subs	r3, r0, #2
+ 151 0008 DBB2     		uxtb	r3, r3
+ 152 000a 082B     		cmp	r3, #8
+ 153 000c 06D8     		bhi	.L9
+  48:main.c        ****             log2N = temp; 
+ 154              		.loc 1 48 0
+ 155 000e 044B     		ldr	r3, .L12
+ 156 0010 1870     		strb	r0, [r3]
+  49:main.c        ****             N = 2^log2N ;
+ 157              		.loc 1 49 0
+ 158 0012 80F00200 		eor	r0, r0, #2
+ 159              	.LVL3:
+ 160 0016 C0B2     		uxtb	r0, r0
+ 161 0018 024B     		ldr	r3, .L12+4
+ 162 001a 1880     		strh	r0, [r3]	@ movhi
+ 163              	.LVL4:
+ 164              	.L9:
+ 165 001c 08BD     		pop	{r3, pc}
+ 166              	.L13:
+ 167 001e 00BF     		.align	2
+ 168              	.L12:
+ 169 0020 00000000 		.word	log2N
+ 170 0024 00000000 		.word	N
+ 171              		.cfi_endproc
+ 172              	.LFE64:
+ 173              		.size	isr2_bl, .-isr2_bl
+ 174              		.section	.text.initialize,"ax",%progbits
+ 175              		.align	2
+ 176              		.global	initialize
+ 177              		.thumb
+ 178              		.thumb_func
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 5
+
+
+ 179              		.type	initialize, %function
+ 180              	initialize:
+ 181              	.LFB66:
+  50:main.c        ****             if(temp == 2 ){ // for QAM 4
+  51:main.c        ****             }
+  52:main.c        ****             else if(temp == 3 ){ // for QAM 8
+  53:main.c        ****             }
+  54:main.c        ****             else if(temp == 4 ){ //for QAM 16
+  55:main.c        ****             }
+  56:main.c        ****             else if(temp == 5 ){ //for QAM 32
+  57:main.c        ****             }
+  58:main.c        ****             else if(temp == 6 ){ //for QAM 64
+  59:main.c        ****             }
+  60:main.c        ****             else if(temp == 7 ){ //for QAM 128
+  61:main.c        ****             }
+  62:main.c        ****             else if(temp == 8 ){ //for QAM 256
+  63:main.c        ****             }
+  64:main.c        ****             else if(temp == 9 ){ //for QAM 512
+  65:main.c        ****             }
+  66:main.c        ****             else if(temp == 10 ){ //for QAM 1024
+  67:main.c        ****             }
+  68:main.c        ****             else{}
+  69:main.c        ****         }      
+  70:main.c        ****         else{}
+  71:main.c        **** }
+  72:main.c        **** 
+  73:main.c        **** // ********************************************************* Main function
+  74:main.c        **** int main(void)
+  75:main.c        **** {
+  76:main.c        ****     initialize();                   // calling the function to initialize the variables.
+  77:main.c        ****     CLOCK_Start();                  // on clock
+  78:main.c        ****     X_Start();                      // on DAC X axis.
+  79:main.c        ****     Y_Start();                      // on DAC Y axis.
+  80:main.c        ****     UART_Start();                   // on UART 
+  81:main.c        ****     isr_clk_StartEx(isr1_clk);      // on interrupt clk.
+  82:main.c        ****     //isr_bluetooth_StartEx(isr2_bl); // on rx interrupt.
+  83:main.c        ****     CyGlobalIntEnable;              // Enable global interrupts.
+  84:main.c        **** 
+  85:main.c        ****     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
+  86:main.c        ****     for(;;)
+  87:main.c        ****     {
+  88:main.c        ****         //****************************************4 QAM (1 per cuadrant) [2 bits] ok
+  89:main.c        ****         if(log2N == 2){
+  90:main.c        ****             if(data_QAM == 0){X_SetValue(10*s); Y_SetValue(10*s); signX_Write(0); signY_Write(0);}
+  91:main.c        ****             else if(data_QAM == 1){X_SetValue(10*s); Y_SetValue(10*s); signX_Write(1); signY_Write(
+  92:main.c        ****             else if(data_QAM == 2){X_SetValue(10*s); Y_SetValue(10*s); signX_Write(0); signY_Write(
+  93:main.c        ****             else if(data_QAM == 3){X_SetValue(10*s); Y_SetValue(10*s); signX_Write(0); signY_Write(
+  94:main.c        ****             else{}; //error case
+  95:main.c        ****         }
+  96:main.c        ****         //****************************************8 QAM [3 bits] ok
+  97:main.c        ****         else if(log2N == 3){
+  98:main.c        ****             if(data_QAM == 0){X_SetValue(8*s); Y_SetValue(0); signX_Write(0); signY_Write(0);}
+  99:main.c        ****             else if(data_QAM == 1){X_SetValue(0); Y_SetValue(8*s); signX_Write(0); signY_Write(0);}
+ 100:main.c        ****             else if(data_QAM == 2){X_SetValue(8*s); Y_SetValue(0); signX_Write(1); signY_Write(0);}
+ 101:main.c        ****             else if(data_QAM == 3){X_SetValue(0); Y_SetValue(8*s); signX_Write(0); signY_Write(1);}
+ 102:main.c        ****             else if(data_QAM == 4){X_SetValue(16*s); Y_SetValue(16*s); signX_Write(0); signY_Write(
+ 103:main.c        ****             else if(data_QAM == 5){X_SetValue(16*s); Y_SetValue(16*s); signX_Write(1); signY_Write(
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 6
+
+
+ 104:main.c        ****             else if(data_QAM == 6){X_SetValue(16*s); Y_SetValue(16*s); signX_Write(1); signY_Write(
+ 105:main.c        ****             else if(data_QAM == 7){X_SetValue(16*s); Y_SetValue(16*s); signX_Write(0); signY_Write(
+ 106:main.c        ****             else {} // error case 
+ 107:main.c        ****         }
+ 108:main.c        ****         //****************************************16 QAM (4 per cuadrant) [4 bits] ok
+ 109:main.c        ****         else if(log2N == 4){
+ 110:main.c        ****             //bias
+ 111:main.c        ****             if(data_QAM > 11){signX_Write(0); signY_Write(1); tmp = data_QAM - 12;}
+ 112:main.c        ****             else if(data_QAM > 7){signX_Write(1); signY_Write(1); tmp= data_QAM - 8;}
+ 113:main.c        ****             else if(data_QAM >3){signX_Write(1); signY_Write(1); tmp = data_QAM - 4;}
+ 114:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 115:main.c        ****             //analog data
+ 116:main.c        ****             if(tmp == 0){X_SetValue(8*s); Y_SetValue(8*s);}
+ 117:main.c        ****             else if(tmp == 1){X_SetValue(16*s); Y_SetValue(8*s);}
+ 118:main.c        ****             else if(tmp == 2){X_SetValue(8*s); Y_SetValue(16*s);}
+ 119:main.c        ****             else if(tmp == 3){X_SetValue(16*s); Y_SetValue(16*s);}
+ 120:main.c        ****             else{}; //error case
+ 121:main.c        ****         }        
+ 122:main.c        ****         //****************************************32 QAM (8 per cuadrant) [5 bits]
+ 123:main.c        ****         else if(log2N == 5){
+ 124:main.c        ****             //bias
+ 125:main.c        ****             if(data_QAM > 23){signX_Write(0); signY_Write(0); tmp = data_QAM - 24;}
+ 126:main.c        ****             else if(data_QAM > 15){signX_Write(0); signY_Write(0); tmp= data_QAM - 16;}
+ 127:main.c        ****             else if(data_QAM >7){signX_Write(0); signY_Write(0); tmp = data_QAM - 8;}
+ 128:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 129:main.c        ****             //analog data
+ 130:main.c        ****             X_SetValue(s*xcoor);
+ 131:main.c        ****             Y_SetValue(s*ycoor);
+ 132:main.c        ****         }
+ 133:main.c        ****         //****************************************64 QAM (16 per cuadrant) [6 bits]
+ 134:main.c        ****         else if(log2N == 6){
+ 135:main.c        ****             //bias
+ 136:main.c        ****             if(data_QAM > 47){signX_Write(0); signY_Write(0); tmp = data_QAM - 48;}
+ 137:main.c        ****             else if(data_QAM > 31){signX_Write(1); signY_Write(0); tmp= data_QAM - 32;}
+ 138:main.c        ****             else if(data_QAM >15){signX_Write(1); signY_Write(1); tmp = data_QAM - 16;}
+ 139:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 140:main.c        ****             //analog data
+ 141:main.c        ****             //analog data
+ 142:main.c        ****             X_SetValue(s*xcoor);
+ 143:main.c        ****             Y_SetValue(s*ycoor);
+ 144:main.c        ****         }
+ 145:main.c        ****         //****************************************128 QAM (32 per cuadrant) [7 bits]
+ 146:main.c        ****         else if(log2N == 7){
+ 147:main.c        ****             //bias
+ 148:main.c        ****             if(data_QAM > 95){signX_Write(0); signY_Write(0); tmp = data_QAM - 96;}
+ 149:main.c        ****             else if(data_QAM > 63){signX_Write(1); signY_Write(0); tmp= data_QAM - 64;}
+ 150:main.c        ****             else if(data_QAM >31){signX_Write(1); signY_Write(1); tmp = data_QAM - 32;}
+ 151:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 152:main.c        ****              //analog data
+ 153:main.c        ****             X_SetValue(s*xcoor);
+ 154:main.c        ****             Y_SetValue(s*ycoor);
+ 155:main.c        ****         }
+ 156:main.c        ****         //****************************************256 QAM (64 per cuadrant) [8 bits]
+ 157:main.c        ****         else if(log2N == 8){
+ 158:main.c        ****             //bias
+ 159:main.c        ****             if(data_QAM > 191){signX_Write(0); signY_Write(0); tmp = data_QAM - 192;}
+ 160:main.c        ****             else if(data_QAM > 127){signX_Write(1); signY_Write(0); tmp= data_QAM - 128;}
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 7
+
+
+ 161:main.c        ****             else if(data_QAM >63){signX_Write(1); signY_Write(1); tmp = data_QAM - 64;}
+ 162:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 163:main.c        ****              //analog data
+ 164:main.c        ****             X_SetValue(s*xcoor);
+ 165:main.c        ****             Y_SetValue(s*ycoor);
+ 166:main.c        ****         }
+ 167:main.c        ****         //****************************************512 QAM (128 per cuadrant) [9 bits]
+ 168:main.c        ****         else if(log2N == 9){
+ 169:main.c        ****         //bias
+ 170:main.c        ****             if(data_QAM > 383){signX_Write(0); signY_Write(0); tmp = data_QAM - 384;}
+ 171:main.c        ****             else if(data_QAM > 255){signX_Write(1); signY_Write(0); tmp= data_QAM - 256;}
+ 172:main.c        ****             else if(data_QAM >127){signX_Write(1); signY_Write(1); tmp = data_QAM - 128;}
+ 173:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 174:main.c        ****             //analog data
+ 175:main.c        ****             X_SetValue(s*xcoor);
+ 176:main.c        ****             Y_SetValue(s*ycoor);    
+ 177:main.c        ****         }
+ 178:main.c        ****         //****************************************1024 QAM (256 per cuadrant) [10 bits]
+ 179:main.c        ****         else if(log2N == 10){
+ 180:main.c        ****             //bias
+ 181:main.c        ****             if(data_QAM > 767){signX_Write(0); signY_Write(1); tmp = data_QAM - 768;}
+ 182:main.c        ****             else if(data_QAM > 511){signX_Write(1); signY_Write(0); tmp= data_QAM - 512;}
+ 183:main.c        ****             else if(data_QAM > 255){signX_Write(1); signY_Write(1); tmp = data_QAM - 256;}
+ 184:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 185:main.c        ****              //analog data
+ 186:main.c        ****             X_SetValue(s*xcoor);
+ 187:main.c        ****             Y_SetValue(s*ycoor);
+ 188:main.c        ****             
+ 189:main.c        ****         }
+ 190:main.c        ****         
+ 191:main.c        ****         //****************************************** error case 
+ 192:main.c        ****         else{
+ 193:main.c        ****         }
+ 194:main.c        ****     }
+ 195:main.c        **** }
+ 196:main.c        **** 
+ 197:main.c        **** // ***************************** This function is for initialize variables
+ 198:main.c        **** void initialize(){
+ 182              		.loc 1 198 0
+ 183              		.cfi_startproc
+ 184              		@ args = 0, pretend = 0, frame = 0
+ 185              		@ frame_needed = 0, uses_anonymous_args = 0
+ 186              		@ link register save eliminated.
+ 199:main.c        ****     nbit = 0; // for start sending the  first bit
+ 187              		.loc 1 199 0
+ 188 0000 0023     		movs	r3, #0
+ 189 0002 094A     		ldr	r2, .L15
+ 190 0004 1370     		strb	r3, [r2]
+ 200:main.c        ****     data_QAM = 0; // initial value
+ 191              		.loc 1 200 0
+ 192 0006 094A     		ldr	r2, .L15+4
+ 193 0008 1380     		strh	r3, [r2]	@ movhi
+ 201:main.c        ****     N =4; // initial value 
+ 194              		.loc 1 201 0
+ 195 000a 0422     		movs	r2, #4
+ 196 000c 084B     		ldr	r3, .L15+8
+ 197 000e 1A80     		strh	r2, [r3]	@ movhi
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 8
+
+
+ 202:main.c        ****     log2N = 2;
+ 198              		.loc 1 202 0
+ 199 0010 0223     		movs	r3, #2
+ 200 0012 084A     		ldr	r2, .L15+12
+ 201 0014 1370     		strb	r3, [r2]
+ 203:main.c        ****     s = 15; // step (less distance between stars)
+ 202              		.loc 1 203 0
+ 203 0016 0F21     		movs	r1, #15
+ 204 0018 074A     		ldr	r2, .L15+16
+ 205 001a 1170     		strb	r1, [r2]
+ 204:main.c        ****     xlim = 2; // in fact it is 16 but the flux of data starts at 0
+ 206              		.loc 1 204 0
+ 207 001c 074A     		ldr	r2, .L15+20
+ 208 001e 1370     		strb	r3, [r2]
+ 205:main.c        ****     uno=1; // 
+ 209              		.loc 1 205 0
+ 210 0020 0122     		movs	r2, #1
+ 211 0022 074B     		ldr	r3, .L15+24
+ 212 0024 1A70     		strb	r2, [r3]
+ 213 0026 7047     		bx	lr
+ 214              	.L16:
+ 215              		.align	2
+ 216              	.L15:
+ 217 0028 00000000 		.word	nbit
+ 218 002c 00000000 		.word	data_QAM
+ 219 0030 00000000 		.word	N
+ 220 0034 00000000 		.word	log2N
+ 221 0038 00000000 		.word	s
+ 222 003c 00000000 		.word	xlim
+ 223 0040 00000000 		.word	uno
+ 224              		.cfi_endproc
+ 225              	.LFE66:
+ 226              		.size	initialize, .-initialize
+ 227              		.section	.text.main,"ax",%progbits
+ 228              		.align	2
+ 229              		.global	main
+ 230              		.thumb
+ 231              		.thumb_func
+ 232              		.type	main, %function
+ 233              	main:
+ 234              	.LFB65:
+  75:main.c        ****     initialize();                   // calling the function to initialize the variables.
+ 235              		.loc 1 75 0
+ 236              		.cfi_startproc
+ 237              		@ Volatile: function does not return.
+ 238              		@ args = 0, pretend = 0, frame = 0
+ 239              		@ frame_needed = 0, uses_anonymous_args = 0
+ 240 0000 08B5     		push	{r3, lr}
+ 241              		.cfi_def_cfa_offset 8
+ 242              		.cfi_offset 3, -8
+ 243              		.cfi_offset 14, -4
+  76:main.c        ****     CLOCK_Start();                  // on clock
+ 244              		.loc 1 76 0
+ 245 0002 FFF7FEFF 		bl	initialize
+ 246              	.LVL5:
+  77:main.c        ****     X_Start();                      // on DAC X axis.
+ 247              		.loc 1 77 0
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 9
+
+
+ 248 0006 FFF7FEFF 		bl	CLOCK_Start
+ 249              	.LVL6:
+  78:main.c        ****     Y_Start();                      // on DAC Y axis.
+ 250              		.loc 1 78 0
+ 251 000a FFF7FEFF 		bl	X_Start
+ 252              	.LVL7:
+  79:main.c        ****     UART_Start();                   // on UART 
+ 253              		.loc 1 79 0
+ 254 000e FFF7FEFF 		bl	Y_Start
+ 255              	.LVL8:
+  80:main.c        ****     isr_clk_StartEx(isr1_clk);      // on interrupt clk.
+ 256              		.loc 1 80 0
+ 257 0012 FFF7FEFF 		bl	UART_Start
+ 258              	.LVL9:
+  81:main.c        ****     //isr_bluetooth_StartEx(isr2_bl); // on rx interrupt.
+ 259              		.loc 1 81 0
+ 260 0016 BF48     		ldr	r0, .L70
+ 261 0018 FFF7FEFF 		bl	isr_clk_StartEx
+ 262              	.LVL10:
+  83:main.c        **** 
+ 263              		.loc 1 83 0
+ 264              		.syntax unified
+ 265              	@ 83 "main.c" 1
+ 266 001c 62B6     		CPSIE   i
+ 267              	@ 0 "" 2
+ 268              		.thumb
+ 269              		.syntax unified
+ 270              	.L18:
+  89:main.c        ****             if(data_QAM == 0){X_SetValue(10*s); Y_SetValue(10*s); signX_Write(0); signY_Write(0);}
+ 271              		.loc 1 89 0
+ 272 001e BE4B     		ldr	r3, .L70+4
+ 273 0020 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 274 0022 022B     		cmp	r3, #2
+ 275 0024 68D1     		bne	.L19
+  90:main.c        ****             else if(data_QAM == 1){X_SetValue(10*s); Y_SetValue(10*s); signX_Write(1); signY_Write(
+ 276              		.loc 1 90 0
+ 277 0026 BD4B     		ldr	r3, .L70+8
+ 278 0028 1B88     		ldrh	r3, [r3]
+ 279 002a BBB9     		cbnz	r3, .L20
+  90:main.c        ****             else if(data_QAM == 1){X_SetValue(10*s); Y_SetValue(10*s); signX_Write(1); signY_Write(
+ 280              		.loc 1 90 0 is_stmt 0 discriminator 1
+ 281 002c BC4C     		ldr	r4, .L70+12
+ 282 002e 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 283 0030 03EB8303 		add	r3, r3, r3, lsl #2
+ 284 0034 5800     		lsls	r0, r3, #1
+ 285 0036 00F0FE00 		and	r0, r0, #254
+ 286 003a FFF7FEFF 		bl	X_SetValue
+ 287              	.LVL11:
+ 288 003e 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 289 0040 03EB8303 		add	r3, r3, r3, lsl #2
+ 290 0044 5800     		lsls	r0, r3, #1
+ 291 0046 00F0FE00 		and	r0, r0, #254
+ 292 004a FFF7FEFF 		bl	Y_SetValue
+ 293              	.LVL12:
+ 294 004e 0020     		movs	r0, #0
+ 295 0050 FFF7FEFF 		bl	signX_Write
+ 296              	.LVL13:
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 10
+
+
+ 297 0054 0020     		movs	r0, #0
+ 298 0056 FFF7FEFF 		bl	signY_Write
+ 299              	.LVL14:
+ 300 005a E0E7     		b	.L18
+ 301              	.L20:
+  91:main.c        ****             else if(data_QAM == 2){X_SetValue(10*s); Y_SetValue(10*s); signX_Write(0); signY_Write(
+ 302              		.loc 1 91 0 is_stmt 1
+ 303 005c 012B     		cmp	r3, #1
+ 304 005e 17D1     		bne	.L22
+  91:main.c        ****             else if(data_QAM == 2){X_SetValue(10*s); Y_SetValue(10*s); signX_Write(0); signY_Write(
+ 305              		.loc 1 91 0 is_stmt 0 discriminator 1
+ 306 0060 AF4C     		ldr	r4, .L70+12
+ 307 0062 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 308 0064 03EB8303 		add	r3, r3, r3, lsl #2
+ 309 0068 5800     		lsls	r0, r3, #1
+ 310 006a 00F0FE00 		and	r0, r0, #254
+ 311 006e FFF7FEFF 		bl	X_SetValue
+ 312              	.LVL15:
+ 313 0072 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 314 0074 03EB8303 		add	r3, r3, r3, lsl #2
+ 315 0078 5800     		lsls	r0, r3, #1
+ 316 007a 00F0FE00 		and	r0, r0, #254
+ 317 007e FFF7FEFF 		bl	Y_SetValue
+ 318              	.LVL16:
+ 319 0082 0120     		movs	r0, #1
+ 320 0084 FFF7FEFF 		bl	signX_Write
+ 321              	.LVL17:
+ 322 0088 0020     		movs	r0, #0
+ 323 008a FFF7FEFF 		bl	signY_Write
+ 324              	.LVL18:
+ 325 008e C6E7     		b	.L18
+ 326              	.L22:
+  92:main.c        ****             else if(data_QAM == 3){X_SetValue(10*s); Y_SetValue(10*s); signX_Write(0); signY_Write(
+ 327              		.loc 1 92 0 is_stmt 1
+ 328 0090 022B     		cmp	r3, #2
+ 329 0092 17D1     		bne	.L23
+  92:main.c        ****             else if(data_QAM == 3){X_SetValue(10*s); Y_SetValue(10*s); signX_Write(0); signY_Write(
+ 330              		.loc 1 92 0 is_stmt 0 discriminator 1
+ 331 0094 A24C     		ldr	r4, .L70+12
+ 332 0096 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 333 0098 03EB8303 		add	r3, r3, r3, lsl #2
+ 334 009c 5800     		lsls	r0, r3, #1
+ 335 009e 00F0FE00 		and	r0, r0, #254
+ 336 00a2 FFF7FEFF 		bl	X_SetValue
+ 337              	.LVL19:
+ 338 00a6 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 339 00a8 03EB8303 		add	r3, r3, r3, lsl #2
+ 340 00ac 5800     		lsls	r0, r3, #1
+ 341 00ae 00F0FE00 		and	r0, r0, #254
+ 342 00b2 FFF7FEFF 		bl	Y_SetValue
+ 343              	.LVL20:
+ 344 00b6 0020     		movs	r0, #0
+ 345 00b8 FFF7FEFF 		bl	signX_Write
+ 346              	.LVL21:
+ 347 00bc 0020     		movs	r0, #0
+ 348 00be FFF7FEFF 		bl	signY_Write
+ 349              	.LVL22:
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 11
+
+
+ 350 00c2 ACE7     		b	.L18
+ 351              	.L23:
+  93:main.c        ****             else{}; //error case
+ 352              		.loc 1 93 0 is_stmt 1
+ 353 00c4 032B     		cmp	r3, #3
+ 354 00c6 AAD1     		bne	.L18
+  93:main.c        ****             else{}; //error case
+ 355              		.loc 1 93 0 is_stmt 0 discriminator 1
+ 356 00c8 954C     		ldr	r4, .L70+12
+ 357 00ca 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 358 00cc 03EB8303 		add	r3, r3, r3, lsl #2
+ 359 00d0 5800     		lsls	r0, r3, #1
+ 360 00d2 00F0FE00 		and	r0, r0, #254
+ 361 00d6 FFF7FEFF 		bl	X_SetValue
+ 362              	.LVL23:
+ 363 00da 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 364 00dc 03EB8303 		add	r3, r3, r3, lsl #2
+ 365 00e0 5800     		lsls	r0, r3, #1
+ 366 00e2 00F0FE00 		and	r0, r0, #254
+ 367 00e6 FFF7FEFF 		bl	Y_SetValue
+ 368              	.LVL24:
+ 369 00ea 0020     		movs	r0, #0
+ 370 00ec FFF7FEFF 		bl	signX_Write
+ 371              	.LVL25:
+ 372 00f0 0120     		movs	r0, #1
+ 373 00f2 FFF7FEFF 		bl	signY_Write
+ 374              	.LVL26:
+ 375 00f6 92E7     		b	.L18
+ 376              	.L19:
+  97:main.c        ****             if(data_QAM == 0){X_SetValue(8*s); Y_SetValue(0); signX_Write(0); signY_Write(0);}
+ 377              		.loc 1 97 0 is_stmt 1
+ 378 00f8 032B     		cmp	r3, #3
+ 379 00fa 40F0A680 		bne	.L24
+  98:main.c        ****             else if(data_QAM == 1){X_SetValue(0); Y_SetValue(8*s); signX_Write(0); signY_Write(0);}
+ 380              		.loc 1 98 0
+ 381 00fe 874B     		ldr	r3, .L70+8
+ 382 0100 1B88     		ldrh	r3, [r3]
+ 383 0102 83B9     		cbnz	r3, .L25
+  98:main.c        ****             else if(data_QAM == 1){X_SetValue(0); Y_SetValue(8*s); signX_Write(0); signY_Write(0);}
+ 384              		.loc 1 98 0 is_stmt 0 discriminator 1
+ 385 0104 864B     		ldr	r3, .L70+12
+ 386 0106 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 387 0108 C000     		lsls	r0, r0, #3
+ 388 010a 00F0F800 		and	r0, r0, #248
+ 389 010e FFF7FEFF 		bl	X_SetValue
+ 390              	.LVL27:
+ 391 0112 0020     		movs	r0, #0
+ 392 0114 FFF7FEFF 		bl	Y_SetValue
+ 393              	.LVL28:
+ 394 0118 0020     		movs	r0, #0
+ 395 011a FFF7FEFF 		bl	signX_Write
+ 396              	.LVL29:
+ 397 011e 0020     		movs	r0, #0
+ 398 0120 FFF7FEFF 		bl	signY_Write
+ 399              	.LVL30:
+ 400 0124 7BE7     		b	.L18
+ 401              	.L25:
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 12
+
+
+  99:main.c        ****             else if(data_QAM == 2){X_SetValue(8*s); Y_SetValue(0); signX_Write(1); signY_Write(0);}
+ 402              		.loc 1 99 0 is_stmt 1
+ 403 0126 012B     		cmp	r3, #1
+ 404 0128 10D1     		bne	.L26
+  99:main.c        ****             else if(data_QAM == 2){X_SetValue(8*s); Y_SetValue(0); signX_Write(1); signY_Write(0);}
+ 405              		.loc 1 99 0 is_stmt 0 discriminator 1
+ 406 012a 0020     		movs	r0, #0
+ 407 012c FFF7FEFF 		bl	X_SetValue
+ 408              	.LVL31:
+ 409 0130 7B4B     		ldr	r3, .L70+12
+ 410 0132 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 411 0134 C000     		lsls	r0, r0, #3
+ 412 0136 00F0F800 		and	r0, r0, #248
+ 413 013a FFF7FEFF 		bl	Y_SetValue
+ 414              	.LVL32:
+ 415 013e 0020     		movs	r0, #0
+ 416 0140 FFF7FEFF 		bl	signX_Write
+ 417              	.LVL33:
+ 418 0144 0020     		movs	r0, #0
+ 419 0146 FFF7FEFF 		bl	signY_Write
+ 420              	.LVL34:
+ 421 014a 68E7     		b	.L18
+ 422              	.L26:
+ 100:main.c        ****             else if(data_QAM == 3){X_SetValue(0); Y_SetValue(8*s); signX_Write(0); signY_Write(1);}
+ 423              		.loc 1 100 0 is_stmt 1
+ 424 014c 022B     		cmp	r3, #2
+ 425 014e 10D1     		bne	.L27
+ 100:main.c        ****             else if(data_QAM == 3){X_SetValue(0); Y_SetValue(8*s); signX_Write(0); signY_Write(1);}
+ 426              		.loc 1 100 0 is_stmt 0 discriminator 1
+ 427 0150 734B     		ldr	r3, .L70+12
+ 428 0152 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 429 0154 C000     		lsls	r0, r0, #3
+ 430 0156 00F0F800 		and	r0, r0, #248
+ 431 015a FFF7FEFF 		bl	X_SetValue
+ 432              	.LVL35:
+ 433 015e 0020     		movs	r0, #0
+ 434 0160 FFF7FEFF 		bl	Y_SetValue
+ 435              	.LVL36:
+ 436 0164 0120     		movs	r0, #1
+ 437 0166 FFF7FEFF 		bl	signX_Write
+ 438              	.LVL37:
+ 439 016a 0020     		movs	r0, #0
+ 440 016c FFF7FEFF 		bl	signY_Write
+ 441              	.LVL38:
+ 442 0170 55E7     		b	.L18
+ 443              	.L27:
+ 101:main.c        ****             else if(data_QAM == 4){X_SetValue(16*s); Y_SetValue(16*s); signX_Write(0); signY_Write(
+ 444              		.loc 1 101 0 is_stmt 1
+ 445 0172 032B     		cmp	r3, #3
+ 446 0174 10D1     		bne	.L28
+ 101:main.c        ****             else if(data_QAM == 4){X_SetValue(16*s); Y_SetValue(16*s); signX_Write(0); signY_Write(
+ 447              		.loc 1 101 0 is_stmt 0 discriminator 1
+ 448 0176 0020     		movs	r0, #0
+ 449 0178 FFF7FEFF 		bl	X_SetValue
+ 450              	.LVL39:
+ 451 017c 684B     		ldr	r3, .L70+12
+ 452 017e 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 13
+
+
+ 453 0180 C000     		lsls	r0, r0, #3
+ 454 0182 00F0F800 		and	r0, r0, #248
+ 455 0186 FFF7FEFF 		bl	Y_SetValue
+ 456              	.LVL40:
+ 457 018a 0020     		movs	r0, #0
+ 458 018c FFF7FEFF 		bl	signX_Write
+ 459              	.LVL41:
+ 460 0190 0120     		movs	r0, #1
+ 461 0192 FFF7FEFF 		bl	signY_Write
+ 462              	.LVL42:
+ 463 0196 42E7     		b	.L18
+ 464              	.L28:
+ 102:main.c        ****             else if(data_QAM == 5){X_SetValue(16*s); Y_SetValue(16*s); signX_Write(1); signY_Write(
+ 465              		.loc 1 102 0 is_stmt 1
+ 466 0198 042B     		cmp	r3, #4
+ 467 019a 13D1     		bne	.L29
+ 102:main.c        ****             else if(data_QAM == 5){X_SetValue(16*s); Y_SetValue(16*s); signX_Write(1); signY_Write(
+ 468              		.loc 1 102 0 is_stmt 0 discriminator 1
+ 469 019c 604C     		ldr	r4, .L70+12
+ 470 019e 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 471 01a0 0001     		lsls	r0, r0, #4
+ 472 01a2 00F0F000 		and	r0, r0, #240
+ 473 01a6 FFF7FEFF 		bl	X_SetValue
+ 474              	.LVL43:
+ 475 01aa 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 476 01ac 0001     		lsls	r0, r0, #4
+ 477 01ae 00F0F000 		and	r0, r0, #240
+ 478 01b2 FFF7FEFF 		bl	Y_SetValue
+ 479              	.LVL44:
+ 480 01b6 0020     		movs	r0, #0
+ 481 01b8 FFF7FEFF 		bl	signX_Write
+ 482              	.LVL45:
+ 483 01bc 0020     		movs	r0, #0
+ 484 01be FFF7FEFF 		bl	signY_Write
+ 485              	.LVL46:
+ 486 01c2 2CE7     		b	.L18
+ 487              	.L29:
+ 103:main.c        ****             else if(data_QAM == 6){X_SetValue(16*s); Y_SetValue(16*s); signX_Write(1); signY_Write(
+ 488              		.loc 1 103 0 is_stmt 1
+ 489 01c4 052B     		cmp	r3, #5
+ 490 01c6 13D1     		bne	.L30
+ 103:main.c        ****             else if(data_QAM == 6){X_SetValue(16*s); Y_SetValue(16*s); signX_Write(1); signY_Write(
+ 491              		.loc 1 103 0 is_stmt 0 discriminator 1
+ 492 01c8 554C     		ldr	r4, .L70+12
+ 493 01ca 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 494 01cc 0001     		lsls	r0, r0, #4
+ 495 01ce 00F0F000 		and	r0, r0, #240
+ 496 01d2 FFF7FEFF 		bl	X_SetValue
+ 497              	.LVL47:
+ 498 01d6 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 499 01d8 0001     		lsls	r0, r0, #4
+ 500 01da 00F0F000 		and	r0, r0, #240
+ 501 01de FFF7FEFF 		bl	Y_SetValue
+ 502              	.LVL48:
+ 503 01e2 0120     		movs	r0, #1
+ 504 01e4 FFF7FEFF 		bl	signX_Write
+ 505              	.LVL49:
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 14
+
+
+ 506 01e8 0020     		movs	r0, #0
+ 507 01ea FFF7FEFF 		bl	signY_Write
+ 508              	.LVL50:
+ 509 01ee 16E7     		b	.L18
+ 510              	.L30:
+ 104:main.c        ****             else if(data_QAM == 7){X_SetValue(16*s); Y_SetValue(16*s); signX_Write(0); signY_Write(
+ 511              		.loc 1 104 0 is_stmt 1
+ 512 01f0 062B     		cmp	r3, #6
+ 513 01f2 13D1     		bne	.L31
+ 104:main.c        ****             else if(data_QAM == 7){X_SetValue(16*s); Y_SetValue(16*s); signX_Write(0); signY_Write(
+ 514              		.loc 1 104 0 is_stmt 0 discriminator 1
+ 515 01f4 4A4C     		ldr	r4, .L70+12
+ 516 01f6 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 517 01f8 0001     		lsls	r0, r0, #4
+ 518 01fa 00F0F000 		and	r0, r0, #240
+ 519 01fe FFF7FEFF 		bl	X_SetValue
+ 520              	.LVL51:
+ 521 0202 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 522 0204 0001     		lsls	r0, r0, #4
+ 523 0206 00F0F000 		and	r0, r0, #240
+ 524 020a FFF7FEFF 		bl	Y_SetValue
+ 525              	.LVL52:
+ 526 020e 0120     		movs	r0, #1
+ 527 0210 FFF7FEFF 		bl	signX_Write
+ 528              	.LVL53:
+ 529 0214 0120     		movs	r0, #1
+ 530 0216 FFF7FEFF 		bl	signY_Write
+ 531              	.LVL54:
+ 532 021a 00E7     		b	.L18
+ 533              	.L31:
+ 105:main.c        ****             else {} // error case 
+ 534              		.loc 1 105 0 is_stmt 1
+ 535 021c 072B     		cmp	r3, #7
+ 536 021e 7FF4FEAE 		bne	.L18
+ 105:main.c        ****             else {} // error case 
+ 537              		.loc 1 105 0 is_stmt 0 discriminator 1
+ 538 0222 3F4C     		ldr	r4, .L70+12
+ 539 0224 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 540 0226 0001     		lsls	r0, r0, #4
+ 541 0228 00F0F000 		and	r0, r0, #240
+ 542 022c FFF7FEFF 		bl	X_SetValue
+ 543              	.LVL55:
+ 544 0230 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 545 0232 0001     		lsls	r0, r0, #4
+ 546 0234 00F0F000 		and	r0, r0, #240
+ 547 0238 FFF7FEFF 		bl	Y_SetValue
+ 548              	.LVL56:
+ 549 023c 0020     		movs	r0, #0
+ 550 023e FFF7FEFF 		bl	signX_Write
+ 551              	.LVL57:
+ 552 0242 0120     		movs	r0, #1
+ 553 0244 FFF7FEFF 		bl	signY_Write
+ 554              	.LVL58:
+ 555 0248 E9E6     		b	.L18
+ 556              	.L24:
+ 109:main.c        ****             //bias
+ 557              		.loc 1 109 0 is_stmt 1
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 15
+
+
+ 558 024a 042B     		cmp	r3, #4
+ 559 024c 7DD1     		bne	.L32
+ 111:main.c        ****             else if(data_QAM > 7){signX_Write(1); signY_Write(1); tmp= data_QAM - 8;}
+ 560              		.loc 1 111 0
+ 561 024e 334B     		ldr	r3, .L70+8
+ 562 0250 1B88     		ldrh	r3, [r3]
+ 563 0252 0B2B     		cmp	r3, #11
+ 564 0254 0BD9     		bls	.L33
+ 111:main.c        ****             else if(data_QAM > 7){signX_Write(1); signY_Write(1); tmp= data_QAM - 8;}
+ 565              		.loc 1 111 0 is_stmt 0 discriminator 1
+ 566 0256 0020     		movs	r0, #0
+ 567 0258 FFF7FEFF 		bl	signX_Write
+ 568              	.LVL59:
+ 569 025c 0120     		movs	r0, #1
+ 570 025e FFF7FEFF 		bl	signY_Write
+ 571              	.LVL60:
+ 572 0262 2E4B     		ldr	r3, .L70+8
+ 573 0264 1B88     		ldrh	r3, [r3]
+ 574 0266 0C3B     		subs	r3, r3, #12
+ 575 0268 2E4A     		ldr	r2, .L70+16
+ 576 026a 1380     		strh	r3, [r2]	@ movhi
+ 577 026c 21E0     		b	.L34
+ 578              	.L33:
+ 112:main.c        ****             else if(data_QAM >3){signX_Write(1); signY_Write(1); tmp = data_QAM - 4;}
+ 579              		.loc 1 112 0 is_stmt 1
+ 580 026e 072B     		cmp	r3, #7
+ 581 0270 0BD9     		bls	.L35
+ 112:main.c        ****             else if(data_QAM >3){signX_Write(1); signY_Write(1); tmp = data_QAM - 4;}
+ 582              		.loc 1 112 0 is_stmt 0 discriminator 1
+ 583 0272 0120     		movs	r0, #1
+ 584 0274 FFF7FEFF 		bl	signX_Write
+ 585              	.LVL61:
+ 586 0278 0120     		movs	r0, #1
+ 587 027a FFF7FEFF 		bl	signY_Write
+ 588              	.LVL62:
+ 589 027e 274B     		ldr	r3, .L70+8
+ 590 0280 1B88     		ldrh	r3, [r3]
+ 591 0282 083B     		subs	r3, r3, #8
+ 592 0284 274A     		ldr	r2, .L70+16
+ 593 0286 1380     		strh	r3, [r2]	@ movhi
+ 594 0288 13E0     		b	.L34
+ 595              	.L35:
+ 113:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 596              		.loc 1 113 0 is_stmt 1
+ 597 028a 032B     		cmp	r3, #3
+ 598 028c 0BD9     		bls	.L36
+ 113:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 599              		.loc 1 113 0 is_stmt 0 discriminator 1
+ 600 028e 0120     		movs	r0, #1
+ 601 0290 FFF7FEFF 		bl	signX_Write
+ 602              	.LVL63:
+ 603 0294 0120     		movs	r0, #1
+ 604 0296 FFF7FEFF 		bl	signY_Write
+ 605              	.LVL64:
+ 606 029a 204B     		ldr	r3, .L70+8
+ 607 029c 1B88     		ldrh	r3, [r3]
+ 608 029e 043B     		subs	r3, r3, #4
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 16
+
+
+ 609 02a0 204A     		ldr	r2, .L70+16
+ 610 02a2 1380     		strh	r3, [r2]	@ movhi
+ 611 02a4 05E0     		b	.L34
+ 612              	.L36:
+ 114:main.c        ****             //analog data
+ 613              		.loc 1 114 0 is_stmt 1
+ 614 02a6 0020     		movs	r0, #0
+ 615 02a8 FFF7FEFF 		bl	signX_Write
+ 616              	.LVL65:
+ 617 02ac 0020     		movs	r0, #0
+ 618 02ae FFF7FEFF 		bl	signY_Write
+ 619              	.LVL66:
+ 620              	.L34:
+ 116:main.c        ****             else if(tmp == 1){X_SetValue(16*s); Y_SetValue(8*s);}
+ 621              		.loc 1 116 0
+ 622 02b2 1C4B     		ldr	r3, .L70+16
+ 623 02b4 1B88     		ldrh	r3, [r3]
+ 624 02b6 6BB9     		cbnz	r3, .L37
+ 116:main.c        ****             else if(tmp == 1){X_SetValue(16*s); Y_SetValue(8*s);}
+ 625              		.loc 1 116 0 is_stmt 0 discriminator 1
+ 626 02b8 194C     		ldr	r4, .L70+12
+ 627 02ba 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 628 02bc C000     		lsls	r0, r0, #3
+ 629 02be 00F0F800 		and	r0, r0, #248
+ 630 02c2 FFF7FEFF 		bl	X_SetValue
+ 631              	.LVL67:
+ 632 02c6 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 633 02c8 C000     		lsls	r0, r0, #3
+ 634 02ca 00F0F800 		and	r0, r0, #248
+ 635 02ce FFF7FEFF 		bl	Y_SetValue
+ 636              	.LVL68:
+ 637 02d2 A4E6     		b	.L18
+ 638              	.L37:
+ 117:main.c        ****             else if(tmp == 2){X_SetValue(8*s); Y_SetValue(16*s);}
+ 639              		.loc 1 117 0 is_stmt 1
+ 640 02d4 012B     		cmp	r3, #1
+ 641 02d6 0DD1     		bne	.L38
+ 117:main.c        ****             else if(tmp == 2){X_SetValue(8*s); Y_SetValue(16*s);}
+ 642              		.loc 1 117 0 is_stmt 0 discriminator 1
+ 643 02d8 114C     		ldr	r4, .L70+12
+ 644 02da 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 645 02dc 0001     		lsls	r0, r0, #4
+ 646 02de 00F0F000 		and	r0, r0, #240
+ 647 02e2 FFF7FEFF 		bl	X_SetValue
+ 648              	.LVL69:
+ 649 02e6 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 650 02e8 C000     		lsls	r0, r0, #3
+ 651 02ea 00F0F800 		and	r0, r0, #248
+ 652 02ee FFF7FEFF 		bl	Y_SetValue
+ 653              	.LVL70:
+ 654 02f2 94E6     		b	.L18
+ 655              	.L38:
+ 118:main.c        ****             else if(tmp == 3){X_SetValue(16*s); Y_SetValue(16*s);}
+ 656              		.loc 1 118 0 is_stmt 1
+ 657 02f4 022B     		cmp	r3, #2
+ 658 02f6 17D1     		bne	.L39
+ 118:main.c        ****             else if(tmp == 3){X_SetValue(16*s); Y_SetValue(16*s);}
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 17
+
+
+ 659              		.loc 1 118 0 is_stmt 0 discriminator 1
+ 660 02f8 094C     		ldr	r4, .L70+12
+ 661 02fa 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 662 02fc C000     		lsls	r0, r0, #3
+ 663 02fe 00F0F800 		and	r0, r0, #248
+ 664 0302 FFF7FEFF 		bl	X_SetValue
+ 665              	.LVL71:
+ 666 0306 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 667 0308 0001     		lsls	r0, r0, #4
+ 668 030a 00F0F000 		and	r0, r0, #240
+ 669 030e FFF7FEFF 		bl	Y_SetValue
+ 670              	.LVL72:
+ 671 0312 84E6     		b	.L18
+ 672              	.L71:
+ 673              		.align	2
+ 674              	.L70:
+ 675 0314 00000000 		.word	isr1_clk
+ 676 0318 00000000 		.word	log2N
+ 677 031c 00000000 		.word	data_QAM
+ 678 0320 00000000 		.word	s
+ 679 0324 00000000 		.word	tmp
+ 680              	.L39:
+ 119:main.c        ****             else{}; //error case
+ 681              		.loc 1 119 0 is_stmt 1
+ 682 0328 032B     		cmp	r3, #3
+ 683 032a 7FF478AE 		bne	.L18
+ 119:main.c        ****             else{}; //error case
+ 684              		.loc 1 119 0 is_stmt 0 discriminator 1
+ 685 032e AB4C     		ldr	r4, .L72
+ 686 0330 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 687 0332 0001     		lsls	r0, r0, #4
+ 688 0334 00F0F000 		and	r0, r0, #240
+ 689 0338 FFF7FEFF 		bl	X_SetValue
+ 690              	.LVL73:
+ 691 033c 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 692 033e 0001     		lsls	r0, r0, #4
+ 693 0340 00F0F000 		and	r0, r0, #240
+ 694 0344 FFF7FEFF 		bl	Y_SetValue
+ 695              	.LVL74:
+ 696 0348 69E6     		b	.L18
+ 697              	.L32:
+ 123:main.c        ****             //bias
+ 698              		.loc 1 123 0 is_stmt 1
+ 699 034a 052B     		cmp	r3, #5
+ 700 034c 43D1     		bne	.L40
+ 125:main.c        ****             else if(data_QAM > 15){signX_Write(0); signY_Write(0); tmp= data_QAM - 16;}
+ 701              		.loc 1 125 0
+ 702 034e A44B     		ldr	r3, .L72+4
+ 703 0350 1B88     		ldrh	r3, [r3]
+ 704 0352 172B     		cmp	r3, #23
+ 705 0354 0BD9     		bls	.L41
+ 125:main.c        ****             else if(data_QAM > 15){signX_Write(0); signY_Write(0); tmp= data_QAM - 16;}
+ 706              		.loc 1 125 0 is_stmt 0 discriminator 1
+ 707 0356 0020     		movs	r0, #0
+ 708 0358 FFF7FEFF 		bl	signX_Write
+ 709              	.LVL75:
+ 710 035c 0020     		movs	r0, #0
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 18
+
+
+ 711 035e FFF7FEFF 		bl	signY_Write
+ 712              	.LVL76:
+ 713 0362 9F4B     		ldr	r3, .L72+4
+ 714 0364 1B88     		ldrh	r3, [r3]
+ 715 0366 183B     		subs	r3, r3, #24
+ 716 0368 9E4A     		ldr	r2, .L72+8
+ 717 036a 1380     		strh	r3, [r2]	@ movhi
+ 718 036c 21E0     		b	.L42
+ 719              	.L41:
+ 126:main.c        ****             else if(data_QAM >7){signX_Write(0); signY_Write(0); tmp = data_QAM - 8;}
+ 720              		.loc 1 126 0 is_stmt 1
+ 721 036e 0F2B     		cmp	r3, #15
+ 722 0370 0BD9     		bls	.L43
+ 126:main.c        ****             else if(data_QAM >7){signX_Write(0); signY_Write(0); tmp = data_QAM - 8;}
+ 723              		.loc 1 126 0 is_stmt 0 discriminator 1
+ 724 0372 0020     		movs	r0, #0
+ 725 0374 FFF7FEFF 		bl	signX_Write
+ 726              	.LVL77:
+ 727 0378 0020     		movs	r0, #0
+ 728 037a FFF7FEFF 		bl	signY_Write
+ 729              	.LVL78:
+ 730 037e 984B     		ldr	r3, .L72+4
+ 731 0380 1B88     		ldrh	r3, [r3]
+ 732 0382 103B     		subs	r3, r3, #16
+ 733 0384 974A     		ldr	r2, .L72+8
+ 734 0386 1380     		strh	r3, [r2]	@ movhi
+ 735 0388 13E0     		b	.L42
+ 736              	.L43:
+ 127:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 737              		.loc 1 127 0 is_stmt 1
+ 738 038a 072B     		cmp	r3, #7
+ 739 038c 0BD9     		bls	.L44
+ 127:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 740              		.loc 1 127 0 is_stmt 0 discriminator 1
+ 741 038e 0020     		movs	r0, #0
+ 742 0390 FFF7FEFF 		bl	signX_Write
+ 743              	.LVL79:
+ 744 0394 0020     		movs	r0, #0
+ 745 0396 FFF7FEFF 		bl	signY_Write
+ 746              	.LVL80:
+ 747 039a 914B     		ldr	r3, .L72+4
+ 748 039c 1B88     		ldrh	r3, [r3]
+ 749 039e 083B     		subs	r3, r3, #8
+ 750 03a0 904A     		ldr	r2, .L72+8
+ 751 03a2 1380     		strh	r3, [r2]	@ movhi
+ 752 03a4 05E0     		b	.L42
+ 753              	.L44:
+ 128:main.c        ****             //analog data
+ 754              		.loc 1 128 0 is_stmt 1
+ 755 03a6 0020     		movs	r0, #0
+ 756 03a8 FFF7FEFF 		bl	signX_Write
+ 757              	.LVL81:
+ 758 03ac 0020     		movs	r0, #0
+ 759 03ae FFF7FEFF 		bl	signY_Write
+ 760              	.LVL82:
+ 761              	.L42:
+ 130:main.c        ****             Y_SetValue(s*ycoor);
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 19
+
+
+ 762              		.loc 1 130 0
+ 763 03b2 8A4C     		ldr	r4, .L72
+ 764 03b4 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 765 03b6 8C4A     		ldr	r2, .L72+12
+ 766 03b8 1078     		ldrb	r0, [r2]	@ zero_extendqisi2
+ 767 03ba 03FB00F0 		mul	r0, r3, r0
+ 768 03be C0B2     		uxtb	r0, r0
+ 769 03c0 FFF7FEFF 		bl	X_SetValue
+ 770              	.LVL83:
+ 131:main.c        ****         }
+ 771              		.loc 1 131 0
+ 772 03c4 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 773 03c6 894A     		ldr	r2, .L72+16
+ 774 03c8 1078     		ldrb	r0, [r2]	@ zero_extendqisi2
+ 775 03ca 03FB00F0 		mul	r0, r3, r0
+ 776 03ce C0B2     		uxtb	r0, r0
+ 777 03d0 FFF7FEFF 		bl	Y_SetValue
+ 778              	.LVL84:
+ 779 03d4 23E6     		b	.L18
+ 780              	.L40:
+ 134:main.c        ****             //bias
+ 781              		.loc 1 134 0
+ 782 03d6 062B     		cmp	r3, #6
+ 783 03d8 43D1     		bne	.L45
+ 136:main.c        ****             else if(data_QAM > 31){signX_Write(1); signY_Write(0); tmp= data_QAM - 32;}
+ 784              		.loc 1 136 0
+ 785 03da 814B     		ldr	r3, .L72+4
+ 786 03dc 1B88     		ldrh	r3, [r3]
+ 787 03de 2F2B     		cmp	r3, #47
+ 788 03e0 0BD9     		bls	.L46
+ 136:main.c        ****             else if(data_QAM > 31){signX_Write(1); signY_Write(0); tmp= data_QAM - 32;}
+ 789              		.loc 1 136 0 is_stmt 0 discriminator 1
+ 790 03e2 0020     		movs	r0, #0
+ 791 03e4 FFF7FEFF 		bl	signX_Write
+ 792              	.LVL85:
+ 793 03e8 0020     		movs	r0, #0
+ 794 03ea FFF7FEFF 		bl	signY_Write
+ 795              	.LVL86:
+ 796 03ee 7C4B     		ldr	r3, .L72+4
+ 797 03f0 1B88     		ldrh	r3, [r3]
+ 798 03f2 303B     		subs	r3, r3, #48
+ 799 03f4 7B4A     		ldr	r2, .L72+8
+ 800 03f6 1380     		strh	r3, [r2]	@ movhi
+ 801 03f8 21E0     		b	.L47
+ 802              	.L46:
+ 137:main.c        ****             else if(data_QAM >15){signX_Write(1); signY_Write(1); tmp = data_QAM - 16;}
+ 803              		.loc 1 137 0 is_stmt 1
+ 804 03fa 1F2B     		cmp	r3, #31
+ 805 03fc 0BD9     		bls	.L48
+ 137:main.c        ****             else if(data_QAM >15){signX_Write(1); signY_Write(1); tmp = data_QAM - 16;}
+ 806              		.loc 1 137 0 is_stmt 0 discriminator 1
+ 807 03fe 0120     		movs	r0, #1
+ 808 0400 FFF7FEFF 		bl	signX_Write
+ 809              	.LVL87:
+ 810 0404 0020     		movs	r0, #0
+ 811 0406 FFF7FEFF 		bl	signY_Write
+ 812              	.LVL88:
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 20
+
+
+ 813 040a 754B     		ldr	r3, .L72+4
+ 814 040c 1B88     		ldrh	r3, [r3]
+ 815 040e 203B     		subs	r3, r3, #32
+ 816 0410 744A     		ldr	r2, .L72+8
+ 817 0412 1380     		strh	r3, [r2]	@ movhi
+ 818 0414 13E0     		b	.L47
+ 819              	.L48:
+ 138:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 820              		.loc 1 138 0 is_stmt 1
+ 821 0416 0F2B     		cmp	r3, #15
+ 822 0418 0BD9     		bls	.L49
+ 138:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 823              		.loc 1 138 0 is_stmt 0 discriminator 1
+ 824 041a 0120     		movs	r0, #1
+ 825 041c FFF7FEFF 		bl	signX_Write
+ 826              	.LVL89:
+ 827 0420 0120     		movs	r0, #1
+ 828 0422 FFF7FEFF 		bl	signY_Write
+ 829              	.LVL90:
+ 830 0426 6E4B     		ldr	r3, .L72+4
+ 831 0428 1B88     		ldrh	r3, [r3]
+ 832 042a 103B     		subs	r3, r3, #16
+ 833 042c 6D4A     		ldr	r2, .L72+8
+ 834 042e 1380     		strh	r3, [r2]	@ movhi
+ 835 0430 05E0     		b	.L47
+ 836              	.L49:
+ 139:main.c        ****             //analog data
+ 837              		.loc 1 139 0 is_stmt 1
+ 838 0432 0020     		movs	r0, #0
+ 839 0434 FFF7FEFF 		bl	signX_Write
+ 840              	.LVL91:
+ 841 0438 0020     		movs	r0, #0
+ 842 043a FFF7FEFF 		bl	signY_Write
+ 843              	.LVL92:
+ 844              	.L47:
+ 142:main.c        ****             Y_SetValue(s*ycoor);
+ 845              		.loc 1 142 0
+ 846 043e 674C     		ldr	r4, .L72
+ 847 0440 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 848 0442 694A     		ldr	r2, .L72+12
+ 849 0444 1078     		ldrb	r0, [r2]	@ zero_extendqisi2
+ 850 0446 03FB00F0 		mul	r0, r3, r0
+ 851 044a C0B2     		uxtb	r0, r0
+ 852 044c FFF7FEFF 		bl	X_SetValue
+ 853              	.LVL93:
+ 143:main.c        ****         }
+ 854              		.loc 1 143 0
+ 855 0450 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 856 0452 664A     		ldr	r2, .L72+16
+ 857 0454 1078     		ldrb	r0, [r2]	@ zero_extendqisi2
+ 858 0456 03FB00F0 		mul	r0, r3, r0
+ 859 045a C0B2     		uxtb	r0, r0
+ 860 045c FFF7FEFF 		bl	Y_SetValue
+ 861              	.LVL94:
+ 862 0460 DDE5     		b	.L18
+ 863              	.L45:
+ 146:main.c        ****             //bias
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 21
+
+
+ 864              		.loc 1 146 0
+ 865 0462 072B     		cmp	r3, #7
+ 866 0464 43D1     		bne	.L50
+ 148:main.c        ****             else if(data_QAM > 63){signX_Write(1); signY_Write(0); tmp= data_QAM - 64;}
+ 867              		.loc 1 148 0
+ 868 0466 5E4B     		ldr	r3, .L72+4
+ 869 0468 1B88     		ldrh	r3, [r3]
+ 870 046a 5F2B     		cmp	r3, #95
+ 871 046c 0BD9     		bls	.L51
+ 148:main.c        ****             else if(data_QAM > 63){signX_Write(1); signY_Write(0); tmp= data_QAM - 64;}
+ 872              		.loc 1 148 0 is_stmt 0 discriminator 1
+ 873 046e 0020     		movs	r0, #0
+ 874 0470 FFF7FEFF 		bl	signX_Write
+ 875              	.LVL95:
+ 876 0474 0020     		movs	r0, #0
+ 877 0476 FFF7FEFF 		bl	signY_Write
+ 878              	.LVL96:
+ 879 047a 594B     		ldr	r3, .L72+4
+ 880 047c 1B88     		ldrh	r3, [r3]
+ 881 047e 603B     		subs	r3, r3, #96
+ 882 0480 584A     		ldr	r2, .L72+8
+ 883 0482 1380     		strh	r3, [r2]	@ movhi
+ 884 0484 21E0     		b	.L52
+ 885              	.L51:
+ 149:main.c        ****             else if(data_QAM >31){signX_Write(1); signY_Write(1); tmp = data_QAM - 32;}
+ 886              		.loc 1 149 0 is_stmt 1
+ 887 0486 3F2B     		cmp	r3, #63
+ 888 0488 0BD9     		bls	.L53
+ 149:main.c        ****             else if(data_QAM >31){signX_Write(1); signY_Write(1); tmp = data_QAM - 32;}
+ 889              		.loc 1 149 0 is_stmt 0 discriminator 1
+ 890 048a 0120     		movs	r0, #1
+ 891 048c FFF7FEFF 		bl	signX_Write
+ 892              	.LVL97:
+ 893 0490 0020     		movs	r0, #0
+ 894 0492 FFF7FEFF 		bl	signY_Write
+ 895              	.LVL98:
+ 896 0496 524B     		ldr	r3, .L72+4
+ 897 0498 1B88     		ldrh	r3, [r3]
+ 898 049a 403B     		subs	r3, r3, #64
+ 899 049c 514A     		ldr	r2, .L72+8
+ 900 049e 1380     		strh	r3, [r2]	@ movhi
+ 901 04a0 13E0     		b	.L52
+ 902              	.L53:
+ 150:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 903              		.loc 1 150 0 is_stmt 1
+ 904 04a2 1F2B     		cmp	r3, #31
+ 905 04a4 0BD9     		bls	.L54
+ 150:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 906              		.loc 1 150 0 is_stmt 0 discriminator 1
+ 907 04a6 0120     		movs	r0, #1
+ 908 04a8 FFF7FEFF 		bl	signX_Write
+ 909              	.LVL99:
+ 910 04ac 0120     		movs	r0, #1
+ 911 04ae FFF7FEFF 		bl	signY_Write
+ 912              	.LVL100:
+ 913 04b2 4B4B     		ldr	r3, .L72+4
+ 914 04b4 1B88     		ldrh	r3, [r3]
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 22
+
+
+ 915 04b6 203B     		subs	r3, r3, #32
+ 916 04b8 4A4A     		ldr	r2, .L72+8
+ 917 04ba 1380     		strh	r3, [r2]	@ movhi
+ 918 04bc 05E0     		b	.L52
+ 919              	.L54:
+ 151:main.c        ****              //analog data
+ 920              		.loc 1 151 0 is_stmt 1
+ 921 04be 0020     		movs	r0, #0
+ 922 04c0 FFF7FEFF 		bl	signX_Write
+ 923              	.LVL101:
+ 924 04c4 0020     		movs	r0, #0
+ 925 04c6 FFF7FEFF 		bl	signY_Write
+ 926              	.LVL102:
+ 927              	.L52:
+ 153:main.c        ****             Y_SetValue(s*ycoor);
+ 928              		.loc 1 153 0
+ 929 04ca 444C     		ldr	r4, .L72
+ 930 04cc 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 931 04ce 464A     		ldr	r2, .L72+12
+ 932 04d0 1078     		ldrb	r0, [r2]	@ zero_extendqisi2
+ 933 04d2 03FB00F0 		mul	r0, r3, r0
+ 934 04d6 C0B2     		uxtb	r0, r0
+ 935 04d8 FFF7FEFF 		bl	X_SetValue
+ 936              	.LVL103:
+ 154:main.c        ****         }
+ 937              		.loc 1 154 0
+ 938 04dc 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 939 04de 434A     		ldr	r2, .L72+16
+ 940 04e0 1078     		ldrb	r0, [r2]	@ zero_extendqisi2
+ 941 04e2 03FB00F0 		mul	r0, r3, r0
+ 942 04e6 C0B2     		uxtb	r0, r0
+ 943 04e8 FFF7FEFF 		bl	Y_SetValue
+ 944              	.LVL104:
+ 945 04ec 97E5     		b	.L18
+ 946              	.L50:
+ 157:main.c        ****             //bias
+ 947              		.loc 1 157 0
+ 948 04ee 082B     		cmp	r3, #8
+ 949 04f0 43D1     		bne	.L55
+ 159:main.c        ****             else if(data_QAM > 127){signX_Write(1); signY_Write(0); tmp= data_QAM - 128;}
+ 950              		.loc 1 159 0
+ 951 04f2 3B4B     		ldr	r3, .L72+4
+ 952 04f4 1B88     		ldrh	r3, [r3]
+ 953 04f6 BF2B     		cmp	r3, #191
+ 954 04f8 0BD9     		bls	.L56
+ 159:main.c        ****             else if(data_QAM > 127){signX_Write(1); signY_Write(0); tmp= data_QAM - 128;}
+ 955              		.loc 1 159 0 is_stmt 0 discriminator 1
+ 956 04fa 0020     		movs	r0, #0
+ 957 04fc FFF7FEFF 		bl	signX_Write
+ 958              	.LVL105:
+ 959 0500 0020     		movs	r0, #0
+ 960 0502 FFF7FEFF 		bl	signY_Write
+ 961              	.LVL106:
+ 962 0506 364B     		ldr	r3, .L72+4
+ 963 0508 1B88     		ldrh	r3, [r3]
+ 964 050a C03B     		subs	r3, r3, #192
+ 965 050c 354A     		ldr	r2, .L72+8
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 23
+
+
+ 966 050e 1380     		strh	r3, [r2]	@ movhi
+ 967 0510 21E0     		b	.L57
+ 968              	.L56:
+ 160:main.c        ****             else if(data_QAM >63){signX_Write(1); signY_Write(1); tmp = data_QAM - 64;}
+ 969              		.loc 1 160 0 is_stmt 1
+ 970 0512 7F2B     		cmp	r3, #127
+ 971 0514 0BD9     		bls	.L58
+ 160:main.c        ****             else if(data_QAM >63){signX_Write(1); signY_Write(1); tmp = data_QAM - 64;}
+ 972              		.loc 1 160 0 is_stmt 0 discriminator 1
+ 973 0516 0120     		movs	r0, #1
+ 974 0518 FFF7FEFF 		bl	signX_Write
+ 975              	.LVL107:
+ 976 051c 0020     		movs	r0, #0
+ 977 051e FFF7FEFF 		bl	signY_Write
+ 978              	.LVL108:
+ 979 0522 2F4B     		ldr	r3, .L72+4
+ 980 0524 1B88     		ldrh	r3, [r3]
+ 981 0526 803B     		subs	r3, r3, #128
+ 982 0528 2E4A     		ldr	r2, .L72+8
+ 983 052a 1380     		strh	r3, [r2]	@ movhi
+ 984 052c 13E0     		b	.L57
+ 985              	.L58:
+ 161:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 986              		.loc 1 161 0 is_stmt 1
+ 987 052e 3F2B     		cmp	r3, #63
+ 988 0530 0BD9     		bls	.L59
+ 161:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 989              		.loc 1 161 0 is_stmt 0 discriminator 1
+ 990 0532 0120     		movs	r0, #1
+ 991 0534 FFF7FEFF 		bl	signX_Write
+ 992              	.LVL109:
+ 993 0538 0120     		movs	r0, #1
+ 994 053a FFF7FEFF 		bl	signY_Write
+ 995              	.LVL110:
+ 996 053e 284B     		ldr	r3, .L72+4
+ 997 0540 1B88     		ldrh	r3, [r3]
+ 998 0542 403B     		subs	r3, r3, #64
+ 999 0544 274A     		ldr	r2, .L72+8
+ 1000 0546 1380     		strh	r3, [r2]	@ movhi
+ 1001 0548 05E0     		b	.L57
+ 1002              	.L59:
+ 162:main.c        ****              //analog data
+ 1003              		.loc 1 162 0 is_stmt 1
+ 1004 054a 0020     		movs	r0, #0
+ 1005 054c FFF7FEFF 		bl	signX_Write
+ 1006              	.LVL111:
+ 1007 0550 0020     		movs	r0, #0
+ 1008 0552 FFF7FEFF 		bl	signY_Write
+ 1009              	.LVL112:
+ 1010              	.L57:
+ 164:main.c        ****             Y_SetValue(s*ycoor);
+ 1011              		.loc 1 164 0
+ 1012 0556 214C     		ldr	r4, .L72
+ 1013 0558 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 1014 055a 234A     		ldr	r2, .L72+12
+ 1015 055c 1078     		ldrb	r0, [r2]	@ zero_extendqisi2
+ 1016 055e 03FB00F0 		mul	r0, r3, r0
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 24
+
+
+ 1017 0562 C0B2     		uxtb	r0, r0
+ 1018 0564 FFF7FEFF 		bl	X_SetValue
+ 1019              	.LVL113:
+ 165:main.c        ****         }
+ 1020              		.loc 1 165 0
+ 1021 0568 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 1022 056a 204A     		ldr	r2, .L72+16
+ 1023 056c 1078     		ldrb	r0, [r2]	@ zero_extendqisi2
+ 1024 056e 03FB00F0 		mul	r0, r3, r0
+ 1025 0572 C0B2     		uxtb	r0, r0
+ 1026 0574 FFF7FEFF 		bl	Y_SetValue
+ 1027              	.LVL114:
+ 1028 0578 51E5     		b	.L18
+ 1029              	.L55:
+ 168:main.c        ****         //bias
+ 1030              		.loc 1 168 0
+ 1031 057a 092B     		cmp	r3, #9
+ 1032 057c 50D1     		bne	.L60
+ 170:main.c        ****             else if(data_QAM > 255){signX_Write(1); signY_Write(0); tmp= data_QAM - 256;}
+ 1033              		.loc 1 170 0
+ 1034 057e 184B     		ldr	r3, .L72+4
+ 1035 0580 1B88     		ldrh	r3, [r3]
+ 1036 0582 B3F5C07F 		cmp	r3, #384
+ 1037 0586 0CD3     		bcc	.L61
+ 170:main.c        ****             else if(data_QAM > 255){signX_Write(1); signY_Write(0); tmp= data_QAM - 256;}
+ 1038              		.loc 1 170 0 is_stmt 0 discriminator 1
+ 1039 0588 0020     		movs	r0, #0
+ 1040 058a FFF7FEFF 		bl	signX_Write
+ 1041              	.LVL115:
+ 1042 058e 0020     		movs	r0, #0
+ 1043 0590 FFF7FEFF 		bl	signY_Write
+ 1044              	.LVL116:
+ 1045 0594 124B     		ldr	r3, .L72+4
+ 1046 0596 1B88     		ldrh	r3, [r3]
+ 1047 0598 A3F5C073 		sub	r3, r3, #384
+ 1048 059c 114A     		ldr	r2, .L72+8
+ 1049 059e 1380     		strh	r3, [r2]	@ movhi
+ 1050 05a0 2CE0     		b	.L62
+ 1051              	.L61:
+ 171:main.c        ****             else if(data_QAM >127){signX_Write(1); signY_Write(1); tmp = data_QAM - 128;}
+ 1052              		.loc 1 171 0 is_stmt 1
+ 1053 05a2 FF2B     		cmp	r3, #255
+ 1054 05a4 0CD9     		bls	.L63
+ 171:main.c        ****             else if(data_QAM >127){signX_Write(1); signY_Write(1); tmp = data_QAM - 128;}
+ 1055              		.loc 1 171 0 is_stmt 0 discriminator 1
+ 1056 05a6 0120     		movs	r0, #1
+ 1057 05a8 FFF7FEFF 		bl	signX_Write
+ 1058              	.LVL117:
+ 1059 05ac 0020     		movs	r0, #0
+ 1060 05ae FFF7FEFF 		bl	signY_Write
+ 1061              	.LVL118:
+ 1062 05b2 0B4B     		ldr	r3, .L72+4
+ 1063 05b4 1B88     		ldrh	r3, [r3]
+ 1064 05b6 A3F58073 		sub	r3, r3, #256
+ 1065 05ba 0A4A     		ldr	r2, .L72+8
+ 1066 05bc 1380     		strh	r3, [r2]	@ movhi
+ 1067 05be 1DE0     		b	.L62
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 25
+
+
+ 1068              	.L63:
+ 172:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 1069              		.loc 1 172 0 is_stmt 1
+ 1070 05c0 7F2B     		cmp	r3, #127
+ 1071 05c2 15D9     		bls	.L64
+ 172:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 1072              		.loc 1 172 0 is_stmt 0 discriminator 1
+ 1073 05c4 0120     		movs	r0, #1
+ 1074 05c6 FFF7FEFF 		bl	signX_Write
+ 1075              	.LVL119:
+ 1076 05ca 0120     		movs	r0, #1
+ 1077 05cc FFF7FEFF 		bl	signY_Write
+ 1078              	.LVL120:
+ 1079 05d0 034B     		ldr	r3, .L72+4
+ 1080 05d2 1B88     		ldrh	r3, [r3]
+ 1081 05d4 803B     		subs	r3, r3, #128
+ 1082 05d6 034A     		ldr	r2, .L72+8
+ 1083 05d8 1380     		strh	r3, [r2]	@ movhi
+ 1084 05da 0FE0     		b	.L62
+ 1085              	.L73:
+ 1086              		.align	2
+ 1087              	.L72:
+ 1088 05dc 00000000 		.word	s
+ 1089 05e0 00000000 		.word	data_QAM
+ 1090 05e4 00000000 		.word	tmp
+ 1091 05e8 00000000 		.word	xcoor
+ 1092 05ec 00000000 		.word	ycoor
+ 1093              	.L64:
+ 173:main.c        ****             //analog data
+ 1094              		.loc 1 173 0 is_stmt 1
+ 1095 05f0 0020     		movs	r0, #0
+ 1096 05f2 FFF7FEFF 		bl	signX_Write
+ 1097              	.LVL121:
+ 1098 05f6 0020     		movs	r0, #0
+ 1099 05f8 FFF7FEFF 		bl	signY_Write
+ 1100              	.LVL122:
+ 1101              	.L62:
+ 175:main.c        ****             Y_SetValue(s*ycoor);    
+ 1102              		.loc 1 175 0
+ 1103 05fc 2E4C     		ldr	r4, .L74
+ 1104 05fe 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 1105 0600 2E4A     		ldr	r2, .L74+4
+ 1106 0602 1078     		ldrb	r0, [r2]	@ zero_extendqisi2
+ 1107 0604 03FB00F0 		mul	r0, r3, r0
+ 1108 0608 C0B2     		uxtb	r0, r0
+ 1109 060a FFF7FEFF 		bl	X_SetValue
+ 1110              	.LVL123:
+ 176:main.c        ****         }
+ 1111              		.loc 1 176 0
+ 1112 060e 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 1113 0610 2B4A     		ldr	r2, .L74+8
+ 1114 0612 1078     		ldrb	r0, [r2]	@ zero_extendqisi2
+ 1115 0614 03FB00F0 		mul	r0, r3, r0
+ 1116 0618 C0B2     		uxtb	r0, r0
+ 1117 061a FFF7FEFF 		bl	Y_SetValue
+ 1118              	.LVL124:
+ 1119 061e FEE4     		b	.L18
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 26
+
+
+ 1120              	.L60:
+ 179:main.c        ****             //bias
+ 1121              		.loc 1 179 0
+ 1122 0620 0A2B     		cmp	r3, #10
+ 1123 0622 7FF4FCAC 		bne	.L18
+ 181:main.c        ****             else if(data_QAM > 511){signX_Write(1); signY_Write(0); tmp= data_QAM - 512;}
+ 1124              		.loc 1 181 0
+ 1125 0626 274B     		ldr	r3, .L74+12
+ 1126 0628 1B88     		ldrh	r3, [r3]
+ 1127 062a B3F5407F 		cmp	r3, #768
+ 1128 062e 0CD3     		bcc	.L65
+ 181:main.c        ****             else if(data_QAM > 511){signX_Write(1); signY_Write(0); tmp= data_QAM - 512;}
+ 1129              		.loc 1 181 0 is_stmt 0 discriminator 1
+ 1130 0630 0020     		movs	r0, #0
+ 1131 0632 FFF7FEFF 		bl	signX_Write
+ 1132              	.LVL125:
+ 1133 0636 0120     		movs	r0, #1
+ 1134 0638 FFF7FEFF 		bl	signY_Write
+ 1135              	.LVL126:
+ 1136 063c 214B     		ldr	r3, .L74+12
+ 1137 063e 1B88     		ldrh	r3, [r3]
+ 1138 0640 A3F54073 		sub	r3, r3, #768
+ 1139 0644 204A     		ldr	r2, .L74+16
+ 1140 0646 1380     		strh	r3, [r2]	@ movhi
+ 1141 0648 24E0     		b	.L66
+ 1142              	.L65:
+ 182:main.c        ****             else if(data_QAM > 255){signX_Write(1); signY_Write(1); tmp = data_QAM - 256;}
+ 1143              		.loc 1 182 0 is_stmt 1
+ 1144 064a B3F5007F 		cmp	r3, #512
+ 1145 064e 0CD3     		bcc	.L67
+ 182:main.c        ****             else if(data_QAM > 255){signX_Write(1); signY_Write(1); tmp = data_QAM - 256;}
+ 1146              		.loc 1 182 0 is_stmt 0 discriminator 1
+ 1147 0650 0120     		movs	r0, #1
+ 1148 0652 FFF7FEFF 		bl	signX_Write
+ 1149              	.LVL127:
+ 1150 0656 0020     		movs	r0, #0
+ 1151 0658 FFF7FEFF 		bl	signY_Write
+ 1152              	.LVL128:
+ 1153 065c 194B     		ldr	r3, .L74+12
+ 1154 065e 1B88     		ldrh	r3, [r3]
+ 1155 0660 A3F50073 		sub	r3, r3, #512
+ 1156 0664 184A     		ldr	r2, .L74+16
+ 1157 0666 1380     		strh	r3, [r2]	@ movhi
+ 1158 0668 14E0     		b	.L66
+ 1159              	.L67:
+ 183:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 1160              		.loc 1 183 0 is_stmt 1
+ 1161 066a FF2B     		cmp	r3, #255
+ 1162 066c 0CD9     		bls	.L68
+ 183:main.c        ****             else{signX_Write(0); signY_Write(0);};
+ 1163              		.loc 1 183 0 is_stmt 0 discriminator 1
+ 1164 066e 0120     		movs	r0, #1
+ 1165 0670 FFF7FEFF 		bl	signX_Write
+ 1166              	.LVL129:
+ 1167 0674 0120     		movs	r0, #1
+ 1168 0676 FFF7FEFF 		bl	signY_Write
+ 1169              	.LVL130:
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 27
+
+
+ 1170 067a 124B     		ldr	r3, .L74+12
+ 1171 067c 1B88     		ldrh	r3, [r3]
+ 1172 067e A3F58073 		sub	r3, r3, #256
+ 1173 0682 114A     		ldr	r2, .L74+16
+ 1174 0684 1380     		strh	r3, [r2]	@ movhi
+ 1175 0686 05E0     		b	.L66
+ 1176              	.L68:
+ 184:main.c        ****              //analog data
+ 1177              		.loc 1 184 0 is_stmt 1
+ 1178 0688 0020     		movs	r0, #0
+ 1179 068a FFF7FEFF 		bl	signX_Write
+ 1180              	.LVL131:
+ 1181 068e 0020     		movs	r0, #0
+ 1182 0690 FFF7FEFF 		bl	signY_Write
+ 1183              	.LVL132:
+ 1184              	.L66:
+ 186:main.c        ****             Y_SetValue(s*ycoor);
+ 1185              		.loc 1 186 0
+ 1186 0694 084C     		ldr	r4, .L74
+ 1187 0696 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 1188 0698 084A     		ldr	r2, .L74+4
+ 1189 069a 1078     		ldrb	r0, [r2]	@ zero_extendqisi2
+ 1190 069c 03FB00F0 		mul	r0, r3, r0
+ 1191 06a0 C0B2     		uxtb	r0, r0
+ 1192 06a2 FFF7FEFF 		bl	X_SetValue
+ 1193              	.LVL133:
+ 187:main.c        ****             
+ 1194              		.loc 1 187 0
+ 1195 06a6 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 1196 06a8 054A     		ldr	r2, .L74+8
+ 1197 06aa 1078     		ldrb	r0, [r2]	@ zero_extendqisi2
+ 1198 06ac 03FB00F0 		mul	r0, r3, r0
+ 1199 06b0 C0B2     		uxtb	r0, r0
+ 1200 06b2 FFF7FEFF 		bl	Y_SetValue
+ 1201              	.LVL134:
+ 1202 06b6 B2E4     		b	.L18
+ 1203              	.L75:
+ 1204              		.align	2
+ 1205              	.L74:
+ 1206 06b8 00000000 		.word	s
+ 1207 06bc 00000000 		.word	xcoor
+ 1208 06c0 00000000 		.word	ycoor
+ 1209 06c4 00000000 		.word	data_QAM
+ 1210 06c8 00000000 		.word	tmp
+ 1211              		.cfi_endproc
+ 1212              	.LFE65:
+ 1213              		.size	main, .-main
+ 1214              		.comm	uno,1,1
+ 1215              		.comm	xlim,1,1
+ 1216              		.comm	ycoor,1,1
+ 1217              		.comm	xcoor,1,1
+ 1218              		.comm	s,1,1
+ 1219              		.comm	log2N,1,1
+ 1220              		.comm	nbit,1,1
+ 1221              		.comm	N,2,2
+ 1222              		.comm	tmp,2,2
+ 1223              		.comm	data_QAM,2,2
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 28
+
+
+ 1224              		.text
+ 1225              	.Letext0:
+ 1226              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.1\\psoc creator\\import\\gnu\\arm\\5.4.
+ 1227              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.1\\psoc creator\\import\\gnu\\arm\\5.4.
+ 1228              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 1229              		.file 5 "Generated_Source\\PSoC5/core_cm3.h"
+ 1230              		.file 6 "Generated_Source\\PSoC5/data_out.h"
+ 1231              		.file 7 "Generated_Source\\PSoC5/Pin_in_clk.h"
+ 1232              		.file 8 "Generated_Source\\PSoC5/UART.h"
+ 1233              		.file 9 "Generated_Source\\PSoC5/CLOCK.h"
+ 1234              		.file 10 "Generated_Source\\PSoC5/X.h"
+ 1235              		.file 11 "Generated_Source\\PSoC5/Y.h"
+ 1236              		.file 12 "Generated_Source\\PSoC5/isr_clk.h"
+ 1237              		.file 13 "Generated_Source\\PSoC5/signX.h"
+ 1238              		.file 14 "Generated_Source\\PSoC5/signY.h"
+ 1239              		.section	.debug_info,"",%progbits
+ 1240              	.Ldebug_info0:
+ 1241 0000 5D0A0000 		.4byte	0xa5d
+ 1242 0004 0400     		.2byte	0x4
+ 1243 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 1244 000a 04       		.byte	0x4
+ 1245 000b 01       		.uleb128 0x1
+ 1246 000c 98000000 		.4byte	.LASF39
+ 1247 0010 0C       		.byte	0xc
+ 1248 0011 14020000 		.4byte	.LASF40
+ 1249 0015 53000000 		.4byte	.LASF41
+ 1250 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 1251 001d 00000000 		.4byte	0
+ 1252 0021 00000000 		.4byte	.Ldebug_line0
+ 1253 0025 02       		.uleb128 0x2
+ 1254 0026 01       		.byte	0x1
+ 1255 0027 06       		.byte	0x6
+ 1256 0028 50020000 		.4byte	.LASF0
+ 1257 002c 02       		.uleb128 0x2
+ 1258 002d 01       		.byte	0x1
+ 1259 002e 08       		.byte	0x8
+ 1260 002f 8A000000 		.4byte	.LASF1
+ 1261 0033 02       		.uleb128 0x2
+ 1262 0034 02       		.byte	0x2
+ 1263 0035 05       		.byte	0x5
+ 1264 0036 20020000 		.4byte	.LASF2
+ 1265 003a 02       		.uleb128 0x2
+ 1266 003b 02       		.byte	0x2
+ 1267 003c 07       		.byte	0x7
+ 1268 003d 45010000 		.4byte	.LASF3
+ 1269 0041 03       		.uleb128 0x3
+ 1270 0042 1A000000 		.4byte	.LASF9
+ 1271 0046 02       		.byte	0x2
+ 1272 0047 3F       		.byte	0x3f
+ 1273 0048 4C000000 		.4byte	0x4c
+ 1274 004c 02       		.uleb128 0x2
+ 1275 004d 04       		.byte	0x4
+ 1276 004e 05       		.byte	0x5
+ 1277 004f 3B020000 		.4byte	.LASF4
+ 1278 0053 02       		.uleb128 0x2
+ 1279 0054 04       		.byte	0x4
+ 1280 0055 07       		.byte	0x7
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 29
+
+
+ 1281 0056 2E010000 		.4byte	.LASF5
+ 1282 005a 02       		.uleb128 0x2
+ 1283 005b 08       		.byte	0x8
+ 1284 005c 05       		.byte	0x5
+ 1285 005d 06020000 		.4byte	.LASF6
+ 1286 0061 02       		.uleb128 0x2
+ 1287 0062 08       		.byte	0x8
+ 1288 0063 07       		.byte	0x7
+ 1289 0064 B8010000 		.4byte	.LASF7
+ 1290 0068 04       		.uleb128 0x4
+ 1291 0069 04       		.byte	0x4
+ 1292 006a 05       		.byte	0x5
+ 1293 006b 696E7400 		.ascii	"int\000"
+ 1294 006f 02       		.uleb128 0x2
+ 1295 0070 04       		.byte	0x4
+ 1296 0071 07       		.byte	0x7
+ 1297 0072 A3010000 		.4byte	.LASF8
+ 1298 0076 03       		.uleb128 0x3
+ 1299 0077 26010000 		.4byte	.LASF10
+ 1300 007b 03       		.byte	0x3
+ 1301 007c 2C       		.byte	0x2c
+ 1302 007d 41000000 		.4byte	0x41
+ 1303 0081 05       		.uleb128 0x5
+ 1304 0082 2A020000 		.4byte	.LASF11
+ 1305 0086 04       		.byte	0x4
+ 1306 0087 9201     		.2byte	0x192
+ 1307 0089 2C000000 		.4byte	0x2c
+ 1308 008d 05       		.uleb128 0x5
+ 1309 008e 9C010000 		.4byte	.LASF12
+ 1310 0092 04       		.byte	0x4
+ 1311 0093 9301     		.2byte	0x193
+ 1312 0095 3A000000 		.4byte	0x3a
+ 1313 0099 02       		.uleb128 0x2
+ 1314 009a 04       		.byte	0x4
+ 1315 009b 04       		.byte	0x4
+ 1316 009c 4D000000 		.4byte	.LASF13
+ 1317 00a0 02       		.uleb128 0x2
+ 1318 00a1 08       		.byte	0x8
+ 1319 00a2 04       		.byte	0x4
+ 1320 00a3 80010000 		.4byte	.LASF14
+ 1321 00a7 02       		.uleb128 0x2
+ 1322 00a8 01       		.byte	0x1
+ 1323 00a9 08       		.byte	0x8
+ 1324 00aa 1B020000 		.4byte	.LASF15
+ 1325 00ae 02       		.uleb128 0x2
+ 1326 00af 08       		.byte	0x8
+ 1327 00b0 04       		.byte	0x4
+ 1328 00b1 44020000 		.4byte	.LASF16
+ 1329 00b5 02       		.uleb128 0x2
+ 1330 00b6 04       		.byte	0x4
+ 1331 00b7 07       		.byte	0x7
+ 1332 00b8 FD010000 		.4byte	.LASF17
+ 1333 00bc 06       		.uleb128 0x6
+ 1334 00bd 0C000000 		.4byte	.LASF18
+ 1335 00c1 01       		.byte	0x1
+ 1336 00c2 15       		.byte	0x15
+ 1337 00c3 00000000 		.4byte	.LFB63
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 30
+
+
+ 1338 00c7 A0000000 		.4byte	.LFE63-.LFB63
+ 1339 00cb 01       		.uleb128 0x1
+ 1340 00cc 9C       		.byte	0x9c
+ 1341 00cd E4000000 		.4byte	0xe4
+ 1342 00d1 07       		.uleb128 0x7
+ 1343 00d2 1C000000 		.4byte	.LVL0
+ 1344 00d6 DC090000 		.4byte	0x9dc
+ 1345 00da 07       		.uleb128 0x7
+ 1346 00db 7C000000 		.4byte	.LVL1
+ 1347 00df E7090000 		.4byte	0x9e7
+ 1348 00e3 00       		.byte	0
+ 1349 00e4 06       		.uleb128 0x6
+ 1350 00e5 CF010000 		.4byte	.LASF19
+ 1351 00e9 01       		.byte	0x1
+ 1352 00ea 2C       		.byte	0x2c
+ 1353 00eb 00000000 		.4byte	.LFB64
+ 1354 00ef 28000000 		.4byte	.LFE64-.LFB64
+ 1355 00f3 01       		.uleb128 0x1
+ 1356 00f4 9C       		.byte	0x9c
+ 1357 00f5 12010000 		.4byte	0x112
+ 1358 00f9 08       		.uleb128 0x8
+ 1359 00fa 40010000 		.4byte	.LASF42
+ 1360 00fe 01       		.byte	0x1
+ 1361 00ff 2D       		.byte	0x2d
+ 1362 0100 81000000 		.4byte	0x81
+ 1363 0104 00000000 		.4byte	.LLST0
+ 1364 0108 07       		.uleb128 0x7
+ 1365 0109 06000000 		.4byte	.LVL2
+ 1366 010d F2090000 		.4byte	0x9f2
+ 1367 0111 00       		.byte	0
+ 1368 0112 09       		.uleb128 0x9
+ 1369 0113 30000000 		.4byte	.LASF43
+ 1370 0117 01       		.byte	0x1
+ 1371 0118 C6       		.byte	0xc6
+ 1372 0119 00000000 		.4byte	.LFB66
+ 1373 011d 44000000 		.4byte	.LFE66-.LFB66
+ 1374 0121 01       		.uleb128 0x1
+ 1375 0122 9C       		.byte	0x9c
+ 1376 0123 0A       		.uleb128 0xa
+ 1377 0124 92010000 		.4byte	.LASF44
+ 1378 0128 01       		.byte	0x1
+ 1379 0129 4A       		.byte	0x4a
+ 1380 012a 68000000 		.4byte	0x68
+ 1381 012e 00000000 		.4byte	.LFB65
+ 1382 0132 CC060000 		.4byte	.LFE65-.LFB65
+ 1383 0136 01       		.uleb128 0x1
+ 1384 0137 9C       		.byte	0x9c
+ 1385 0138 25090000 		.4byte	0x925
+ 1386 013c 07       		.uleb128 0x7
+ 1387 013d 06000000 		.4byte	.LVL5
+ 1388 0141 12010000 		.4byte	0x112
+ 1389 0145 07       		.uleb128 0x7
+ 1390 0146 0A000000 		.4byte	.LVL6
+ 1391 014a FD090000 		.4byte	0x9fd
+ 1392 014e 07       		.uleb128 0x7
+ 1393 014f 0E000000 		.4byte	.LVL7
+ 1394 0153 080A0000 		.4byte	0xa08
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 31
+
+
+ 1395 0157 07       		.uleb128 0x7
+ 1396 0158 12000000 		.4byte	.LVL8
+ 1397 015c 130A0000 		.4byte	0xa13
+ 1398 0160 07       		.uleb128 0x7
+ 1399 0161 16000000 		.4byte	.LVL9
+ 1400 0165 1E0A0000 		.4byte	0xa1e
+ 1401 0169 0B       		.uleb128 0xb
+ 1402 016a 1C000000 		.4byte	.LVL10
+ 1403 016e 290A0000 		.4byte	0xa29
+ 1404 0172 80010000 		.4byte	0x180
+ 1405 0176 0C       		.uleb128 0xc
+ 1406 0177 01       		.uleb128 0x1
+ 1407 0178 50       		.byte	0x50
+ 1408 0179 05       		.uleb128 0x5
+ 1409 017a 03       		.byte	0x3
+ 1410 017b 00000000 		.4byte	isr1_clk
+ 1411 017f 00       		.byte	0
+ 1412 0180 07       		.uleb128 0x7
+ 1413 0181 3E000000 		.4byte	.LVL11
+ 1414 0185 340A0000 		.4byte	0xa34
+ 1415 0189 07       		.uleb128 0x7
+ 1416 018a 4E000000 		.4byte	.LVL12
+ 1417 018e 3F0A0000 		.4byte	0xa3f
+ 1418 0192 0B       		.uleb128 0xb
+ 1419 0193 54000000 		.4byte	.LVL13
+ 1420 0197 4A0A0000 		.4byte	0xa4a
+ 1421 019b A5010000 		.4byte	0x1a5
+ 1422 019f 0C       		.uleb128 0xc
+ 1423 01a0 01       		.uleb128 0x1
+ 1424 01a1 50       		.byte	0x50
+ 1425 01a2 01       		.uleb128 0x1
+ 1426 01a3 30       		.byte	0x30
+ 1427 01a4 00       		.byte	0
+ 1428 01a5 0B       		.uleb128 0xb
+ 1429 01a6 5A000000 		.4byte	.LVL14
+ 1430 01aa 550A0000 		.4byte	0xa55
+ 1431 01ae B8010000 		.4byte	0x1b8
+ 1432 01b2 0C       		.uleb128 0xc
+ 1433 01b3 01       		.uleb128 0x1
+ 1434 01b4 50       		.byte	0x50
+ 1435 01b5 01       		.uleb128 0x1
+ 1436 01b6 30       		.byte	0x30
+ 1437 01b7 00       		.byte	0
+ 1438 01b8 07       		.uleb128 0x7
+ 1439 01b9 72000000 		.4byte	.LVL15
+ 1440 01bd 340A0000 		.4byte	0xa34
+ 1441 01c1 07       		.uleb128 0x7
+ 1442 01c2 82000000 		.4byte	.LVL16
+ 1443 01c6 3F0A0000 		.4byte	0xa3f
+ 1444 01ca 0B       		.uleb128 0xb
+ 1445 01cb 88000000 		.4byte	.LVL17
+ 1446 01cf 4A0A0000 		.4byte	0xa4a
+ 1447 01d3 DD010000 		.4byte	0x1dd
+ 1448 01d7 0C       		.uleb128 0xc
+ 1449 01d8 01       		.uleb128 0x1
+ 1450 01d9 50       		.byte	0x50
+ 1451 01da 01       		.uleb128 0x1
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 32
+
+
+ 1452 01db 31       		.byte	0x31
+ 1453 01dc 00       		.byte	0
+ 1454 01dd 0B       		.uleb128 0xb
+ 1455 01de 8E000000 		.4byte	.LVL18
+ 1456 01e2 550A0000 		.4byte	0xa55
+ 1457 01e6 F0010000 		.4byte	0x1f0
+ 1458 01ea 0C       		.uleb128 0xc
+ 1459 01eb 01       		.uleb128 0x1
+ 1460 01ec 50       		.byte	0x50
+ 1461 01ed 01       		.uleb128 0x1
+ 1462 01ee 30       		.byte	0x30
+ 1463 01ef 00       		.byte	0
+ 1464 01f0 07       		.uleb128 0x7
+ 1465 01f1 A6000000 		.4byte	.LVL19
+ 1466 01f5 340A0000 		.4byte	0xa34
+ 1467 01f9 07       		.uleb128 0x7
+ 1468 01fa B6000000 		.4byte	.LVL20
+ 1469 01fe 3F0A0000 		.4byte	0xa3f
+ 1470 0202 0B       		.uleb128 0xb
+ 1471 0203 BC000000 		.4byte	.LVL21
+ 1472 0207 4A0A0000 		.4byte	0xa4a
+ 1473 020b 15020000 		.4byte	0x215
+ 1474 020f 0C       		.uleb128 0xc
+ 1475 0210 01       		.uleb128 0x1
+ 1476 0211 50       		.byte	0x50
+ 1477 0212 01       		.uleb128 0x1
+ 1478 0213 30       		.byte	0x30
+ 1479 0214 00       		.byte	0
+ 1480 0215 0B       		.uleb128 0xb
+ 1481 0216 C2000000 		.4byte	.LVL22
+ 1482 021a 550A0000 		.4byte	0xa55
+ 1483 021e 28020000 		.4byte	0x228
+ 1484 0222 0C       		.uleb128 0xc
+ 1485 0223 01       		.uleb128 0x1
+ 1486 0224 50       		.byte	0x50
+ 1487 0225 01       		.uleb128 0x1
+ 1488 0226 30       		.byte	0x30
+ 1489 0227 00       		.byte	0
+ 1490 0228 07       		.uleb128 0x7
+ 1491 0229 DA000000 		.4byte	.LVL23
+ 1492 022d 340A0000 		.4byte	0xa34
+ 1493 0231 07       		.uleb128 0x7
+ 1494 0232 EA000000 		.4byte	.LVL24
+ 1495 0236 3F0A0000 		.4byte	0xa3f
+ 1496 023a 0B       		.uleb128 0xb
+ 1497 023b F0000000 		.4byte	.LVL25
+ 1498 023f 4A0A0000 		.4byte	0xa4a
+ 1499 0243 4D020000 		.4byte	0x24d
+ 1500 0247 0C       		.uleb128 0xc
+ 1501 0248 01       		.uleb128 0x1
+ 1502 0249 50       		.byte	0x50
+ 1503 024a 01       		.uleb128 0x1
+ 1504 024b 30       		.byte	0x30
+ 1505 024c 00       		.byte	0
+ 1506 024d 0B       		.uleb128 0xb
+ 1507 024e F6000000 		.4byte	.LVL26
+ 1508 0252 550A0000 		.4byte	0xa55
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 33
+
+
+ 1509 0256 60020000 		.4byte	0x260
+ 1510 025a 0C       		.uleb128 0xc
+ 1511 025b 01       		.uleb128 0x1
+ 1512 025c 50       		.byte	0x50
+ 1513 025d 01       		.uleb128 0x1
+ 1514 025e 31       		.byte	0x31
+ 1515 025f 00       		.byte	0
+ 1516 0260 07       		.uleb128 0x7
+ 1517 0261 12010000 		.4byte	.LVL27
+ 1518 0265 340A0000 		.4byte	0xa34
+ 1519 0269 0B       		.uleb128 0xb
+ 1520 026a 18010000 		.4byte	.LVL28
+ 1521 026e 3F0A0000 		.4byte	0xa3f
+ 1522 0272 7C020000 		.4byte	0x27c
+ 1523 0276 0C       		.uleb128 0xc
+ 1524 0277 01       		.uleb128 0x1
+ 1525 0278 50       		.byte	0x50
+ 1526 0279 01       		.uleb128 0x1
+ 1527 027a 30       		.byte	0x30
+ 1528 027b 00       		.byte	0
+ 1529 027c 0B       		.uleb128 0xb
+ 1530 027d 1E010000 		.4byte	.LVL29
+ 1531 0281 4A0A0000 		.4byte	0xa4a
+ 1532 0285 8F020000 		.4byte	0x28f
+ 1533 0289 0C       		.uleb128 0xc
+ 1534 028a 01       		.uleb128 0x1
+ 1535 028b 50       		.byte	0x50
+ 1536 028c 01       		.uleb128 0x1
+ 1537 028d 30       		.byte	0x30
+ 1538 028e 00       		.byte	0
+ 1539 028f 0B       		.uleb128 0xb
+ 1540 0290 24010000 		.4byte	.LVL30
+ 1541 0294 550A0000 		.4byte	0xa55
+ 1542 0298 A2020000 		.4byte	0x2a2
+ 1543 029c 0C       		.uleb128 0xc
+ 1544 029d 01       		.uleb128 0x1
+ 1545 029e 50       		.byte	0x50
+ 1546 029f 01       		.uleb128 0x1
+ 1547 02a0 30       		.byte	0x30
+ 1548 02a1 00       		.byte	0
+ 1549 02a2 0B       		.uleb128 0xb
+ 1550 02a3 30010000 		.4byte	.LVL31
+ 1551 02a7 340A0000 		.4byte	0xa34
+ 1552 02ab B5020000 		.4byte	0x2b5
+ 1553 02af 0C       		.uleb128 0xc
+ 1554 02b0 01       		.uleb128 0x1
+ 1555 02b1 50       		.byte	0x50
+ 1556 02b2 01       		.uleb128 0x1
+ 1557 02b3 30       		.byte	0x30
+ 1558 02b4 00       		.byte	0
+ 1559 02b5 07       		.uleb128 0x7
+ 1560 02b6 3E010000 		.4byte	.LVL32
+ 1561 02ba 3F0A0000 		.4byte	0xa3f
+ 1562 02be 0B       		.uleb128 0xb
+ 1563 02bf 44010000 		.4byte	.LVL33
+ 1564 02c3 4A0A0000 		.4byte	0xa4a
+ 1565 02c7 D1020000 		.4byte	0x2d1
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 34
+
+
+ 1566 02cb 0C       		.uleb128 0xc
+ 1567 02cc 01       		.uleb128 0x1
+ 1568 02cd 50       		.byte	0x50
+ 1569 02ce 01       		.uleb128 0x1
+ 1570 02cf 30       		.byte	0x30
+ 1571 02d0 00       		.byte	0
+ 1572 02d1 0B       		.uleb128 0xb
+ 1573 02d2 4A010000 		.4byte	.LVL34
+ 1574 02d6 550A0000 		.4byte	0xa55
+ 1575 02da E4020000 		.4byte	0x2e4
+ 1576 02de 0C       		.uleb128 0xc
+ 1577 02df 01       		.uleb128 0x1
+ 1578 02e0 50       		.byte	0x50
+ 1579 02e1 01       		.uleb128 0x1
+ 1580 02e2 30       		.byte	0x30
+ 1581 02e3 00       		.byte	0
+ 1582 02e4 07       		.uleb128 0x7
+ 1583 02e5 5E010000 		.4byte	.LVL35
+ 1584 02e9 340A0000 		.4byte	0xa34
+ 1585 02ed 0B       		.uleb128 0xb
+ 1586 02ee 64010000 		.4byte	.LVL36
+ 1587 02f2 3F0A0000 		.4byte	0xa3f
+ 1588 02f6 00030000 		.4byte	0x300
+ 1589 02fa 0C       		.uleb128 0xc
+ 1590 02fb 01       		.uleb128 0x1
+ 1591 02fc 50       		.byte	0x50
+ 1592 02fd 01       		.uleb128 0x1
+ 1593 02fe 30       		.byte	0x30
+ 1594 02ff 00       		.byte	0
+ 1595 0300 0B       		.uleb128 0xb
+ 1596 0301 6A010000 		.4byte	.LVL37
+ 1597 0305 4A0A0000 		.4byte	0xa4a
+ 1598 0309 13030000 		.4byte	0x313
+ 1599 030d 0C       		.uleb128 0xc
+ 1600 030e 01       		.uleb128 0x1
+ 1601 030f 50       		.byte	0x50
+ 1602 0310 01       		.uleb128 0x1
+ 1603 0311 31       		.byte	0x31
+ 1604 0312 00       		.byte	0
+ 1605 0313 0B       		.uleb128 0xb
+ 1606 0314 70010000 		.4byte	.LVL38
+ 1607 0318 550A0000 		.4byte	0xa55
+ 1608 031c 26030000 		.4byte	0x326
+ 1609 0320 0C       		.uleb128 0xc
+ 1610 0321 01       		.uleb128 0x1
+ 1611 0322 50       		.byte	0x50
+ 1612 0323 01       		.uleb128 0x1
+ 1613 0324 30       		.byte	0x30
+ 1614 0325 00       		.byte	0
+ 1615 0326 0B       		.uleb128 0xb
+ 1616 0327 7C010000 		.4byte	.LVL39
+ 1617 032b 340A0000 		.4byte	0xa34
+ 1618 032f 39030000 		.4byte	0x339
+ 1619 0333 0C       		.uleb128 0xc
+ 1620 0334 01       		.uleb128 0x1
+ 1621 0335 50       		.byte	0x50
+ 1622 0336 01       		.uleb128 0x1
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 35
+
+
+ 1623 0337 30       		.byte	0x30
+ 1624 0338 00       		.byte	0
+ 1625 0339 07       		.uleb128 0x7
+ 1626 033a 8A010000 		.4byte	.LVL40
+ 1627 033e 3F0A0000 		.4byte	0xa3f
+ 1628 0342 0B       		.uleb128 0xb
+ 1629 0343 90010000 		.4byte	.LVL41
+ 1630 0347 4A0A0000 		.4byte	0xa4a
+ 1631 034b 55030000 		.4byte	0x355
+ 1632 034f 0C       		.uleb128 0xc
+ 1633 0350 01       		.uleb128 0x1
+ 1634 0351 50       		.byte	0x50
+ 1635 0352 01       		.uleb128 0x1
+ 1636 0353 30       		.byte	0x30
+ 1637 0354 00       		.byte	0
+ 1638 0355 0B       		.uleb128 0xb
+ 1639 0356 96010000 		.4byte	.LVL42
+ 1640 035a 550A0000 		.4byte	0xa55
+ 1641 035e 68030000 		.4byte	0x368
+ 1642 0362 0C       		.uleb128 0xc
+ 1643 0363 01       		.uleb128 0x1
+ 1644 0364 50       		.byte	0x50
+ 1645 0365 01       		.uleb128 0x1
+ 1646 0366 31       		.byte	0x31
+ 1647 0367 00       		.byte	0
+ 1648 0368 07       		.uleb128 0x7
+ 1649 0369 AA010000 		.4byte	.LVL43
+ 1650 036d 340A0000 		.4byte	0xa34
+ 1651 0371 07       		.uleb128 0x7
+ 1652 0372 B6010000 		.4byte	.LVL44
+ 1653 0376 3F0A0000 		.4byte	0xa3f
+ 1654 037a 0B       		.uleb128 0xb
+ 1655 037b BC010000 		.4byte	.LVL45
+ 1656 037f 4A0A0000 		.4byte	0xa4a
+ 1657 0383 8D030000 		.4byte	0x38d
+ 1658 0387 0C       		.uleb128 0xc
+ 1659 0388 01       		.uleb128 0x1
+ 1660 0389 50       		.byte	0x50
+ 1661 038a 01       		.uleb128 0x1
+ 1662 038b 30       		.byte	0x30
+ 1663 038c 00       		.byte	0
+ 1664 038d 0B       		.uleb128 0xb
+ 1665 038e C2010000 		.4byte	.LVL46
+ 1666 0392 550A0000 		.4byte	0xa55
+ 1667 0396 A0030000 		.4byte	0x3a0
+ 1668 039a 0C       		.uleb128 0xc
+ 1669 039b 01       		.uleb128 0x1
+ 1670 039c 50       		.byte	0x50
+ 1671 039d 01       		.uleb128 0x1
+ 1672 039e 30       		.byte	0x30
+ 1673 039f 00       		.byte	0
+ 1674 03a0 07       		.uleb128 0x7
+ 1675 03a1 D6010000 		.4byte	.LVL47
+ 1676 03a5 340A0000 		.4byte	0xa34
+ 1677 03a9 07       		.uleb128 0x7
+ 1678 03aa E2010000 		.4byte	.LVL48
+ 1679 03ae 3F0A0000 		.4byte	0xa3f
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 36
+
+
+ 1680 03b2 0B       		.uleb128 0xb
+ 1681 03b3 E8010000 		.4byte	.LVL49
+ 1682 03b7 4A0A0000 		.4byte	0xa4a
+ 1683 03bb C5030000 		.4byte	0x3c5
+ 1684 03bf 0C       		.uleb128 0xc
+ 1685 03c0 01       		.uleb128 0x1
+ 1686 03c1 50       		.byte	0x50
+ 1687 03c2 01       		.uleb128 0x1
+ 1688 03c3 31       		.byte	0x31
+ 1689 03c4 00       		.byte	0
+ 1690 03c5 0B       		.uleb128 0xb
+ 1691 03c6 EE010000 		.4byte	.LVL50
+ 1692 03ca 550A0000 		.4byte	0xa55
+ 1693 03ce D8030000 		.4byte	0x3d8
+ 1694 03d2 0C       		.uleb128 0xc
+ 1695 03d3 01       		.uleb128 0x1
+ 1696 03d4 50       		.byte	0x50
+ 1697 03d5 01       		.uleb128 0x1
+ 1698 03d6 30       		.byte	0x30
+ 1699 03d7 00       		.byte	0
+ 1700 03d8 07       		.uleb128 0x7
+ 1701 03d9 02020000 		.4byte	.LVL51
+ 1702 03dd 340A0000 		.4byte	0xa34
+ 1703 03e1 07       		.uleb128 0x7
+ 1704 03e2 0E020000 		.4byte	.LVL52
+ 1705 03e6 3F0A0000 		.4byte	0xa3f
+ 1706 03ea 0B       		.uleb128 0xb
+ 1707 03eb 14020000 		.4byte	.LVL53
+ 1708 03ef 4A0A0000 		.4byte	0xa4a
+ 1709 03f3 FD030000 		.4byte	0x3fd
+ 1710 03f7 0C       		.uleb128 0xc
+ 1711 03f8 01       		.uleb128 0x1
+ 1712 03f9 50       		.byte	0x50
+ 1713 03fa 01       		.uleb128 0x1
+ 1714 03fb 31       		.byte	0x31
+ 1715 03fc 00       		.byte	0
+ 1716 03fd 0B       		.uleb128 0xb
+ 1717 03fe 1A020000 		.4byte	.LVL54
+ 1718 0402 550A0000 		.4byte	0xa55
+ 1719 0406 10040000 		.4byte	0x410
+ 1720 040a 0C       		.uleb128 0xc
+ 1721 040b 01       		.uleb128 0x1
+ 1722 040c 50       		.byte	0x50
+ 1723 040d 01       		.uleb128 0x1
+ 1724 040e 31       		.byte	0x31
+ 1725 040f 00       		.byte	0
+ 1726 0410 07       		.uleb128 0x7
+ 1727 0411 30020000 		.4byte	.LVL55
+ 1728 0415 340A0000 		.4byte	0xa34
+ 1729 0419 07       		.uleb128 0x7
+ 1730 041a 3C020000 		.4byte	.LVL56
+ 1731 041e 3F0A0000 		.4byte	0xa3f
+ 1732 0422 0B       		.uleb128 0xb
+ 1733 0423 42020000 		.4byte	.LVL57
+ 1734 0427 4A0A0000 		.4byte	0xa4a
+ 1735 042b 35040000 		.4byte	0x435
+ 1736 042f 0C       		.uleb128 0xc
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 37
+
+
+ 1737 0430 01       		.uleb128 0x1
+ 1738 0431 50       		.byte	0x50
+ 1739 0432 01       		.uleb128 0x1
+ 1740 0433 30       		.byte	0x30
+ 1741 0434 00       		.byte	0
+ 1742 0435 0B       		.uleb128 0xb
+ 1743 0436 48020000 		.4byte	.LVL58
+ 1744 043a 550A0000 		.4byte	0xa55
+ 1745 043e 48040000 		.4byte	0x448
+ 1746 0442 0C       		.uleb128 0xc
+ 1747 0443 01       		.uleb128 0x1
+ 1748 0444 50       		.byte	0x50
+ 1749 0445 01       		.uleb128 0x1
+ 1750 0446 31       		.byte	0x31
+ 1751 0447 00       		.byte	0
+ 1752 0448 0B       		.uleb128 0xb
+ 1753 0449 5C020000 		.4byte	.LVL59
+ 1754 044d 4A0A0000 		.4byte	0xa4a
+ 1755 0451 5B040000 		.4byte	0x45b
+ 1756 0455 0C       		.uleb128 0xc
+ 1757 0456 01       		.uleb128 0x1
+ 1758 0457 50       		.byte	0x50
+ 1759 0458 01       		.uleb128 0x1
+ 1760 0459 30       		.byte	0x30
+ 1761 045a 00       		.byte	0
+ 1762 045b 0B       		.uleb128 0xb
+ 1763 045c 62020000 		.4byte	.LVL60
+ 1764 0460 550A0000 		.4byte	0xa55
+ 1765 0464 6E040000 		.4byte	0x46e
+ 1766 0468 0C       		.uleb128 0xc
+ 1767 0469 01       		.uleb128 0x1
+ 1768 046a 50       		.byte	0x50
+ 1769 046b 01       		.uleb128 0x1
+ 1770 046c 31       		.byte	0x31
+ 1771 046d 00       		.byte	0
+ 1772 046e 0B       		.uleb128 0xb
+ 1773 046f 78020000 		.4byte	.LVL61
+ 1774 0473 4A0A0000 		.4byte	0xa4a
+ 1775 0477 81040000 		.4byte	0x481
+ 1776 047b 0C       		.uleb128 0xc
+ 1777 047c 01       		.uleb128 0x1
+ 1778 047d 50       		.byte	0x50
+ 1779 047e 01       		.uleb128 0x1
+ 1780 047f 31       		.byte	0x31
+ 1781 0480 00       		.byte	0
+ 1782 0481 0B       		.uleb128 0xb
+ 1783 0482 7E020000 		.4byte	.LVL62
+ 1784 0486 550A0000 		.4byte	0xa55
+ 1785 048a 94040000 		.4byte	0x494
+ 1786 048e 0C       		.uleb128 0xc
+ 1787 048f 01       		.uleb128 0x1
+ 1788 0490 50       		.byte	0x50
+ 1789 0491 01       		.uleb128 0x1
+ 1790 0492 31       		.byte	0x31
+ 1791 0493 00       		.byte	0
+ 1792 0494 0B       		.uleb128 0xb
+ 1793 0495 94020000 		.4byte	.LVL63
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 38
+
+
+ 1794 0499 4A0A0000 		.4byte	0xa4a
+ 1795 049d A7040000 		.4byte	0x4a7
+ 1796 04a1 0C       		.uleb128 0xc
+ 1797 04a2 01       		.uleb128 0x1
+ 1798 04a3 50       		.byte	0x50
+ 1799 04a4 01       		.uleb128 0x1
+ 1800 04a5 31       		.byte	0x31
+ 1801 04a6 00       		.byte	0
+ 1802 04a7 0B       		.uleb128 0xb
+ 1803 04a8 9A020000 		.4byte	.LVL64
+ 1804 04ac 550A0000 		.4byte	0xa55
+ 1805 04b0 BA040000 		.4byte	0x4ba
+ 1806 04b4 0C       		.uleb128 0xc
+ 1807 04b5 01       		.uleb128 0x1
+ 1808 04b6 50       		.byte	0x50
+ 1809 04b7 01       		.uleb128 0x1
+ 1810 04b8 31       		.byte	0x31
+ 1811 04b9 00       		.byte	0
+ 1812 04ba 0B       		.uleb128 0xb
+ 1813 04bb AC020000 		.4byte	.LVL65
+ 1814 04bf 4A0A0000 		.4byte	0xa4a
+ 1815 04c3 CD040000 		.4byte	0x4cd
+ 1816 04c7 0C       		.uleb128 0xc
+ 1817 04c8 01       		.uleb128 0x1
+ 1818 04c9 50       		.byte	0x50
+ 1819 04ca 01       		.uleb128 0x1
+ 1820 04cb 30       		.byte	0x30
+ 1821 04cc 00       		.byte	0
+ 1822 04cd 0B       		.uleb128 0xb
+ 1823 04ce B2020000 		.4byte	.LVL66
+ 1824 04d2 550A0000 		.4byte	0xa55
+ 1825 04d6 E0040000 		.4byte	0x4e0
+ 1826 04da 0C       		.uleb128 0xc
+ 1827 04db 01       		.uleb128 0x1
+ 1828 04dc 50       		.byte	0x50
+ 1829 04dd 01       		.uleb128 0x1
+ 1830 04de 30       		.byte	0x30
+ 1831 04df 00       		.byte	0
+ 1832 04e0 07       		.uleb128 0x7
+ 1833 04e1 C6020000 		.4byte	.LVL67
+ 1834 04e5 340A0000 		.4byte	0xa34
+ 1835 04e9 07       		.uleb128 0x7
+ 1836 04ea D2020000 		.4byte	.LVL68
+ 1837 04ee 3F0A0000 		.4byte	0xa3f
+ 1838 04f2 07       		.uleb128 0x7
+ 1839 04f3 E6020000 		.4byte	.LVL69
+ 1840 04f7 340A0000 		.4byte	0xa34
+ 1841 04fb 07       		.uleb128 0x7
+ 1842 04fc F2020000 		.4byte	.LVL70
+ 1843 0500 3F0A0000 		.4byte	0xa3f
+ 1844 0504 07       		.uleb128 0x7
+ 1845 0505 06030000 		.4byte	.LVL71
+ 1846 0509 340A0000 		.4byte	0xa34
+ 1847 050d 07       		.uleb128 0x7
+ 1848 050e 12030000 		.4byte	.LVL72
+ 1849 0512 3F0A0000 		.4byte	0xa3f
+ 1850 0516 07       		.uleb128 0x7
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 39
+
+
+ 1851 0517 3C030000 		.4byte	.LVL73
+ 1852 051b 340A0000 		.4byte	0xa34
+ 1853 051f 07       		.uleb128 0x7
+ 1854 0520 48030000 		.4byte	.LVL74
+ 1855 0524 3F0A0000 		.4byte	0xa3f
+ 1856 0528 0B       		.uleb128 0xb
+ 1857 0529 5C030000 		.4byte	.LVL75
+ 1858 052d 4A0A0000 		.4byte	0xa4a
+ 1859 0531 3B050000 		.4byte	0x53b
+ 1860 0535 0C       		.uleb128 0xc
+ 1861 0536 01       		.uleb128 0x1
+ 1862 0537 50       		.byte	0x50
+ 1863 0538 01       		.uleb128 0x1
+ 1864 0539 30       		.byte	0x30
+ 1865 053a 00       		.byte	0
+ 1866 053b 0B       		.uleb128 0xb
+ 1867 053c 62030000 		.4byte	.LVL76
+ 1868 0540 550A0000 		.4byte	0xa55
+ 1869 0544 4E050000 		.4byte	0x54e
+ 1870 0548 0C       		.uleb128 0xc
+ 1871 0549 01       		.uleb128 0x1
+ 1872 054a 50       		.byte	0x50
+ 1873 054b 01       		.uleb128 0x1
+ 1874 054c 30       		.byte	0x30
+ 1875 054d 00       		.byte	0
+ 1876 054e 0B       		.uleb128 0xb
+ 1877 054f 78030000 		.4byte	.LVL77
+ 1878 0553 4A0A0000 		.4byte	0xa4a
+ 1879 0557 61050000 		.4byte	0x561
+ 1880 055b 0C       		.uleb128 0xc
+ 1881 055c 01       		.uleb128 0x1
+ 1882 055d 50       		.byte	0x50
+ 1883 055e 01       		.uleb128 0x1
+ 1884 055f 30       		.byte	0x30
+ 1885 0560 00       		.byte	0
+ 1886 0561 0B       		.uleb128 0xb
+ 1887 0562 7E030000 		.4byte	.LVL78
+ 1888 0566 550A0000 		.4byte	0xa55
+ 1889 056a 74050000 		.4byte	0x574
+ 1890 056e 0C       		.uleb128 0xc
+ 1891 056f 01       		.uleb128 0x1
+ 1892 0570 50       		.byte	0x50
+ 1893 0571 01       		.uleb128 0x1
+ 1894 0572 30       		.byte	0x30
+ 1895 0573 00       		.byte	0
+ 1896 0574 0B       		.uleb128 0xb
+ 1897 0575 94030000 		.4byte	.LVL79
+ 1898 0579 4A0A0000 		.4byte	0xa4a
+ 1899 057d 87050000 		.4byte	0x587
+ 1900 0581 0C       		.uleb128 0xc
+ 1901 0582 01       		.uleb128 0x1
+ 1902 0583 50       		.byte	0x50
+ 1903 0584 01       		.uleb128 0x1
+ 1904 0585 30       		.byte	0x30
+ 1905 0586 00       		.byte	0
+ 1906 0587 0B       		.uleb128 0xb
+ 1907 0588 9A030000 		.4byte	.LVL80
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 40
+
+
+ 1908 058c 550A0000 		.4byte	0xa55
+ 1909 0590 9A050000 		.4byte	0x59a
+ 1910 0594 0C       		.uleb128 0xc
+ 1911 0595 01       		.uleb128 0x1
+ 1912 0596 50       		.byte	0x50
+ 1913 0597 01       		.uleb128 0x1
+ 1914 0598 30       		.byte	0x30
+ 1915 0599 00       		.byte	0
+ 1916 059a 0B       		.uleb128 0xb
+ 1917 059b AC030000 		.4byte	.LVL81
+ 1918 059f 4A0A0000 		.4byte	0xa4a
+ 1919 05a3 AD050000 		.4byte	0x5ad
+ 1920 05a7 0C       		.uleb128 0xc
+ 1921 05a8 01       		.uleb128 0x1
+ 1922 05a9 50       		.byte	0x50
+ 1923 05aa 01       		.uleb128 0x1
+ 1924 05ab 30       		.byte	0x30
+ 1925 05ac 00       		.byte	0
+ 1926 05ad 0B       		.uleb128 0xb
+ 1927 05ae B2030000 		.4byte	.LVL82
+ 1928 05b2 550A0000 		.4byte	0xa55
+ 1929 05b6 C0050000 		.4byte	0x5c0
+ 1930 05ba 0C       		.uleb128 0xc
+ 1931 05bb 01       		.uleb128 0x1
+ 1932 05bc 50       		.byte	0x50
+ 1933 05bd 01       		.uleb128 0x1
+ 1934 05be 30       		.byte	0x30
+ 1935 05bf 00       		.byte	0
+ 1936 05c0 07       		.uleb128 0x7
+ 1937 05c1 C4030000 		.4byte	.LVL83
+ 1938 05c5 340A0000 		.4byte	0xa34
+ 1939 05c9 07       		.uleb128 0x7
+ 1940 05ca D4030000 		.4byte	.LVL84
+ 1941 05ce 3F0A0000 		.4byte	0xa3f
+ 1942 05d2 0B       		.uleb128 0xb
+ 1943 05d3 E8030000 		.4byte	.LVL85
+ 1944 05d7 4A0A0000 		.4byte	0xa4a
+ 1945 05db E5050000 		.4byte	0x5e5
+ 1946 05df 0C       		.uleb128 0xc
+ 1947 05e0 01       		.uleb128 0x1
+ 1948 05e1 50       		.byte	0x50
+ 1949 05e2 01       		.uleb128 0x1
+ 1950 05e3 30       		.byte	0x30
+ 1951 05e4 00       		.byte	0
+ 1952 05e5 0B       		.uleb128 0xb
+ 1953 05e6 EE030000 		.4byte	.LVL86
+ 1954 05ea 550A0000 		.4byte	0xa55
+ 1955 05ee F8050000 		.4byte	0x5f8
+ 1956 05f2 0C       		.uleb128 0xc
+ 1957 05f3 01       		.uleb128 0x1
+ 1958 05f4 50       		.byte	0x50
+ 1959 05f5 01       		.uleb128 0x1
+ 1960 05f6 30       		.byte	0x30
+ 1961 05f7 00       		.byte	0
+ 1962 05f8 0B       		.uleb128 0xb
+ 1963 05f9 04040000 		.4byte	.LVL87
+ 1964 05fd 4A0A0000 		.4byte	0xa4a
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 41
+
+
+ 1965 0601 0B060000 		.4byte	0x60b
+ 1966 0605 0C       		.uleb128 0xc
+ 1967 0606 01       		.uleb128 0x1
+ 1968 0607 50       		.byte	0x50
+ 1969 0608 01       		.uleb128 0x1
+ 1970 0609 31       		.byte	0x31
+ 1971 060a 00       		.byte	0
+ 1972 060b 0B       		.uleb128 0xb
+ 1973 060c 0A040000 		.4byte	.LVL88
+ 1974 0610 550A0000 		.4byte	0xa55
+ 1975 0614 1E060000 		.4byte	0x61e
+ 1976 0618 0C       		.uleb128 0xc
+ 1977 0619 01       		.uleb128 0x1
+ 1978 061a 50       		.byte	0x50
+ 1979 061b 01       		.uleb128 0x1
+ 1980 061c 30       		.byte	0x30
+ 1981 061d 00       		.byte	0
+ 1982 061e 0B       		.uleb128 0xb
+ 1983 061f 20040000 		.4byte	.LVL89
+ 1984 0623 4A0A0000 		.4byte	0xa4a
+ 1985 0627 31060000 		.4byte	0x631
+ 1986 062b 0C       		.uleb128 0xc
+ 1987 062c 01       		.uleb128 0x1
+ 1988 062d 50       		.byte	0x50
+ 1989 062e 01       		.uleb128 0x1
+ 1990 062f 31       		.byte	0x31
+ 1991 0630 00       		.byte	0
+ 1992 0631 0B       		.uleb128 0xb
+ 1993 0632 26040000 		.4byte	.LVL90
+ 1994 0636 550A0000 		.4byte	0xa55
+ 1995 063a 44060000 		.4byte	0x644
+ 1996 063e 0C       		.uleb128 0xc
+ 1997 063f 01       		.uleb128 0x1
+ 1998 0640 50       		.byte	0x50
+ 1999 0641 01       		.uleb128 0x1
+ 2000 0642 31       		.byte	0x31
+ 2001 0643 00       		.byte	0
+ 2002 0644 0B       		.uleb128 0xb
+ 2003 0645 38040000 		.4byte	.LVL91
+ 2004 0649 4A0A0000 		.4byte	0xa4a
+ 2005 064d 57060000 		.4byte	0x657
+ 2006 0651 0C       		.uleb128 0xc
+ 2007 0652 01       		.uleb128 0x1
+ 2008 0653 50       		.byte	0x50
+ 2009 0654 01       		.uleb128 0x1
+ 2010 0655 30       		.byte	0x30
+ 2011 0656 00       		.byte	0
+ 2012 0657 0B       		.uleb128 0xb
+ 2013 0658 3E040000 		.4byte	.LVL92
+ 2014 065c 550A0000 		.4byte	0xa55
+ 2015 0660 6A060000 		.4byte	0x66a
+ 2016 0664 0C       		.uleb128 0xc
+ 2017 0665 01       		.uleb128 0x1
+ 2018 0666 50       		.byte	0x50
+ 2019 0667 01       		.uleb128 0x1
+ 2020 0668 30       		.byte	0x30
+ 2021 0669 00       		.byte	0
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 42
+
+
+ 2022 066a 07       		.uleb128 0x7
+ 2023 066b 50040000 		.4byte	.LVL93
+ 2024 066f 340A0000 		.4byte	0xa34
+ 2025 0673 07       		.uleb128 0x7
+ 2026 0674 60040000 		.4byte	.LVL94
+ 2027 0678 3F0A0000 		.4byte	0xa3f
+ 2028 067c 0B       		.uleb128 0xb
+ 2029 067d 74040000 		.4byte	.LVL95
+ 2030 0681 4A0A0000 		.4byte	0xa4a
+ 2031 0685 8F060000 		.4byte	0x68f
+ 2032 0689 0C       		.uleb128 0xc
+ 2033 068a 01       		.uleb128 0x1
+ 2034 068b 50       		.byte	0x50
+ 2035 068c 01       		.uleb128 0x1
+ 2036 068d 30       		.byte	0x30
+ 2037 068e 00       		.byte	0
+ 2038 068f 0B       		.uleb128 0xb
+ 2039 0690 7A040000 		.4byte	.LVL96
+ 2040 0694 550A0000 		.4byte	0xa55
+ 2041 0698 A2060000 		.4byte	0x6a2
+ 2042 069c 0C       		.uleb128 0xc
+ 2043 069d 01       		.uleb128 0x1
+ 2044 069e 50       		.byte	0x50
+ 2045 069f 01       		.uleb128 0x1
+ 2046 06a0 30       		.byte	0x30
+ 2047 06a1 00       		.byte	0
+ 2048 06a2 0B       		.uleb128 0xb
+ 2049 06a3 90040000 		.4byte	.LVL97
+ 2050 06a7 4A0A0000 		.4byte	0xa4a
+ 2051 06ab B5060000 		.4byte	0x6b5
+ 2052 06af 0C       		.uleb128 0xc
+ 2053 06b0 01       		.uleb128 0x1
+ 2054 06b1 50       		.byte	0x50
+ 2055 06b2 01       		.uleb128 0x1
+ 2056 06b3 31       		.byte	0x31
+ 2057 06b4 00       		.byte	0
+ 2058 06b5 0B       		.uleb128 0xb
+ 2059 06b6 96040000 		.4byte	.LVL98
+ 2060 06ba 550A0000 		.4byte	0xa55
+ 2061 06be C8060000 		.4byte	0x6c8
+ 2062 06c2 0C       		.uleb128 0xc
+ 2063 06c3 01       		.uleb128 0x1
+ 2064 06c4 50       		.byte	0x50
+ 2065 06c5 01       		.uleb128 0x1
+ 2066 06c6 30       		.byte	0x30
+ 2067 06c7 00       		.byte	0
+ 2068 06c8 0B       		.uleb128 0xb
+ 2069 06c9 AC040000 		.4byte	.LVL99
+ 2070 06cd 4A0A0000 		.4byte	0xa4a
+ 2071 06d1 DB060000 		.4byte	0x6db
+ 2072 06d5 0C       		.uleb128 0xc
+ 2073 06d6 01       		.uleb128 0x1
+ 2074 06d7 50       		.byte	0x50
+ 2075 06d8 01       		.uleb128 0x1
+ 2076 06d9 31       		.byte	0x31
+ 2077 06da 00       		.byte	0
+ 2078 06db 0B       		.uleb128 0xb
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 43
+
+
+ 2079 06dc B2040000 		.4byte	.LVL100
+ 2080 06e0 550A0000 		.4byte	0xa55
+ 2081 06e4 EE060000 		.4byte	0x6ee
+ 2082 06e8 0C       		.uleb128 0xc
+ 2083 06e9 01       		.uleb128 0x1
+ 2084 06ea 50       		.byte	0x50
+ 2085 06eb 01       		.uleb128 0x1
+ 2086 06ec 31       		.byte	0x31
+ 2087 06ed 00       		.byte	0
+ 2088 06ee 0B       		.uleb128 0xb
+ 2089 06ef C4040000 		.4byte	.LVL101
+ 2090 06f3 4A0A0000 		.4byte	0xa4a
+ 2091 06f7 01070000 		.4byte	0x701
+ 2092 06fb 0C       		.uleb128 0xc
+ 2093 06fc 01       		.uleb128 0x1
+ 2094 06fd 50       		.byte	0x50
+ 2095 06fe 01       		.uleb128 0x1
+ 2096 06ff 30       		.byte	0x30
+ 2097 0700 00       		.byte	0
+ 2098 0701 0B       		.uleb128 0xb
+ 2099 0702 CA040000 		.4byte	.LVL102
+ 2100 0706 550A0000 		.4byte	0xa55
+ 2101 070a 14070000 		.4byte	0x714
+ 2102 070e 0C       		.uleb128 0xc
+ 2103 070f 01       		.uleb128 0x1
+ 2104 0710 50       		.byte	0x50
+ 2105 0711 01       		.uleb128 0x1
+ 2106 0712 30       		.byte	0x30
+ 2107 0713 00       		.byte	0
+ 2108 0714 07       		.uleb128 0x7
+ 2109 0715 DC040000 		.4byte	.LVL103
+ 2110 0719 340A0000 		.4byte	0xa34
+ 2111 071d 07       		.uleb128 0x7
+ 2112 071e EC040000 		.4byte	.LVL104
+ 2113 0722 3F0A0000 		.4byte	0xa3f
+ 2114 0726 0B       		.uleb128 0xb
+ 2115 0727 00050000 		.4byte	.LVL105
+ 2116 072b 4A0A0000 		.4byte	0xa4a
+ 2117 072f 39070000 		.4byte	0x739
+ 2118 0733 0C       		.uleb128 0xc
+ 2119 0734 01       		.uleb128 0x1
+ 2120 0735 50       		.byte	0x50
+ 2121 0736 01       		.uleb128 0x1
+ 2122 0737 30       		.byte	0x30
+ 2123 0738 00       		.byte	0
+ 2124 0739 0B       		.uleb128 0xb
+ 2125 073a 06050000 		.4byte	.LVL106
+ 2126 073e 550A0000 		.4byte	0xa55
+ 2127 0742 4C070000 		.4byte	0x74c
+ 2128 0746 0C       		.uleb128 0xc
+ 2129 0747 01       		.uleb128 0x1
+ 2130 0748 50       		.byte	0x50
+ 2131 0749 01       		.uleb128 0x1
+ 2132 074a 30       		.byte	0x30
+ 2133 074b 00       		.byte	0
+ 2134 074c 0B       		.uleb128 0xb
+ 2135 074d 1C050000 		.4byte	.LVL107
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 44
+
+
+ 2136 0751 4A0A0000 		.4byte	0xa4a
+ 2137 0755 5F070000 		.4byte	0x75f
+ 2138 0759 0C       		.uleb128 0xc
+ 2139 075a 01       		.uleb128 0x1
+ 2140 075b 50       		.byte	0x50
+ 2141 075c 01       		.uleb128 0x1
+ 2142 075d 31       		.byte	0x31
+ 2143 075e 00       		.byte	0
+ 2144 075f 0B       		.uleb128 0xb
+ 2145 0760 22050000 		.4byte	.LVL108
+ 2146 0764 550A0000 		.4byte	0xa55
+ 2147 0768 72070000 		.4byte	0x772
+ 2148 076c 0C       		.uleb128 0xc
+ 2149 076d 01       		.uleb128 0x1
+ 2150 076e 50       		.byte	0x50
+ 2151 076f 01       		.uleb128 0x1
+ 2152 0770 30       		.byte	0x30
+ 2153 0771 00       		.byte	0
+ 2154 0772 0B       		.uleb128 0xb
+ 2155 0773 38050000 		.4byte	.LVL109
+ 2156 0777 4A0A0000 		.4byte	0xa4a
+ 2157 077b 85070000 		.4byte	0x785
+ 2158 077f 0C       		.uleb128 0xc
+ 2159 0780 01       		.uleb128 0x1
+ 2160 0781 50       		.byte	0x50
+ 2161 0782 01       		.uleb128 0x1
+ 2162 0783 31       		.byte	0x31
+ 2163 0784 00       		.byte	0
+ 2164 0785 0B       		.uleb128 0xb
+ 2165 0786 3E050000 		.4byte	.LVL110
+ 2166 078a 550A0000 		.4byte	0xa55
+ 2167 078e 98070000 		.4byte	0x798
+ 2168 0792 0C       		.uleb128 0xc
+ 2169 0793 01       		.uleb128 0x1
+ 2170 0794 50       		.byte	0x50
+ 2171 0795 01       		.uleb128 0x1
+ 2172 0796 31       		.byte	0x31
+ 2173 0797 00       		.byte	0
+ 2174 0798 0B       		.uleb128 0xb
+ 2175 0799 50050000 		.4byte	.LVL111
+ 2176 079d 4A0A0000 		.4byte	0xa4a
+ 2177 07a1 AB070000 		.4byte	0x7ab
+ 2178 07a5 0C       		.uleb128 0xc
+ 2179 07a6 01       		.uleb128 0x1
+ 2180 07a7 50       		.byte	0x50
+ 2181 07a8 01       		.uleb128 0x1
+ 2182 07a9 30       		.byte	0x30
+ 2183 07aa 00       		.byte	0
+ 2184 07ab 0B       		.uleb128 0xb
+ 2185 07ac 56050000 		.4byte	.LVL112
+ 2186 07b0 550A0000 		.4byte	0xa55
+ 2187 07b4 BE070000 		.4byte	0x7be
+ 2188 07b8 0C       		.uleb128 0xc
+ 2189 07b9 01       		.uleb128 0x1
+ 2190 07ba 50       		.byte	0x50
+ 2191 07bb 01       		.uleb128 0x1
+ 2192 07bc 30       		.byte	0x30
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 45
+
+
+ 2193 07bd 00       		.byte	0
+ 2194 07be 07       		.uleb128 0x7
+ 2195 07bf 68050000 		.4byte	.LVL113
+ 2196 07c3 340A0000 		.4byte	0xa34
+ 2197 07c7 07       		.uleb128 0x7
+ 2198 07c8 78050000 		.4byte	.LVL114
+ 2199 07cc 3F0A0000 		.4byte	0xa3f
+ 2200 07d0 0B       		.uleb128 0xb
+ 2201 07d1 8E050000 		.4byte	.LVL115
+ 2202 07d5 4A0A0000 		.4byte	0xa4a
+ 2203 07d9 E3070000 		.4byte	0x7e3
+ 2204 07dd 0C       		.uleb128 0xc
+ 2205 07de 01       		.uleb128 0x1
+ 2206 07df 50       		.byte	0x50
+ 2207 07e0 01       		.uleb128 0x1
+ 2208 07e1 30       		.byte	0x30
+ 2209 07e2 00       		.byte	0
+ 2210 07e3 0B       		.uleb128 0xb
+ 2211 07e4 94050000 		.4byte	.LVL116
+ 2212 07e8 550A0000 		.4byte	0xa55
+ 2213 07ec F6070000 		.4byte	0x7f6
+ 2214 07f0 0C       		.uleb128 0xc
+ 2215 07f1 01       		.uleb128 0x1
+ 2216 07f2 50       		.byte	0x50
+ 2217 07f3 01       		.uleb128 0x1
+ 2218 07f4 30       		.byte	0x30
+ 2219 07f5 00       		.byte	0
+ 2220 07f6 0B       		.uleb128 0xb
+ 2221 07f7 AC050000 		.4byte	.LVL117
+ 2222 07fb 4A0A0000 		.4byte	0xa4a
+ 2223 07ff 09080000 		.4byte	0x809
+ 2224 0803 0C       		.uleb128 0xc
+ 2225 0804 01       		.uleb128 0x1
+ 2226 0805 50       		.byte	0x50
+ 2227 0806 01       		.uleb128 0x1
+ 2228 0807 31       		.byte	0x31
+ 2229 0808 00       		.byte	0
+ 2230 0809 0B       		.uleb128 0xb
+ 2231 080a B2050000 		.4byte	.LVL118
+ 2232 080e 550A0000 		.4byte	0xa55
+ 2233 0812 1C080000 		.4byte	0x81c
+ 2234 0816 0C       		.uleb128 0xc
+ 2235 0817 01       		.uleb128 0x1
+ 2236 0818 50       		.byte	0x50
+ 2237 0819 01       		.uleb128 0x1
+ 2238 081a 30       		.byte	0x30
+ 2239 081b 00       		.byte	0
+ 2240 081c 0B       		.uleb128 0xb
+ 2241 081d CA050000 		.4byte	.LVL119
+ 2242 0821 4A0A0000 		.4byte	0xa4a
+ 2243 0825 2F080000 		.4byte	0x82f
+ 2244 0829 0C       		.uleb128 0xc
+ 2245 082a 01       		.uleb128 0x1
+ 2246 082b 50       		.byte	0x50
+ 2247 082c 01       		.uleb128 0x1
+ 2248 082d 31       		.byte	0x31
+ 2249 082e 00       		.byte	0
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 46
+
+
+ 2250 082f 0B       		.uleb128 0xb
+ 2251 0830 D0050000 		.4byte	.LVL120
+ 2252 0834 550A0000 		.4byte	0xa55
+ 2253 0838 42080000 		.4byte	0x842
+ 2254 083c 0C       		.uleb128 0xc
+ 2255 083d 01       		.uleb128 0x1
+ 2256 083e 50       		.byte	0x50
+ 2257 083f 01       		.uleb128 0x1
+ 2258 0840 31       		.byte	0x31
+ 2259 0841 00       		.byte	0
+ 2260 0842 0B       		.uleb128 0xb
+ 2261 0843 F6050000 		.4byte	.LVL121
+ 2262 0847 4A0A0000 		.4byte	0xa4a
+ 2263 084b 55080000 		.4byte	0x855
+ 2264 084f 0C       		.uleb128 0xc
+ 2265 0850 01       		.uleb128 0x1
+ 2266 0851 50       		.byte	0x50
+ 2267 0852 01       		.uleb128 0x1
+ 2268 0853 30       		.byte	0x30
+ 2269 0854 00       		.byte	0
+ 2270 0855 0B       		.uleb128 0xb
+ 2271 0856 FC050000 		.4byte	.LVL122
+ 2272 085a 550A0000 		.4byte	0xa55
+ 2273 085e 68080000 		.4byte	0x868
+ 2274 0862 0C       		.uleb128 0xc
+ 2275 0863 01       		.uleb128 0x1
+ 2276 0864 50       		.byte	0x50
+ 2277 0865 01       		.uleb128 0x1
+ 2278 0866 30       		.byte	0x30
+ 2279 0867 00       		.byte	0
+ 2280 0868 07       		.uleb128 0x7
+ 2281 0869 0E060000 		.4byte	.LVL123
+ 2282 086d 340A0000 		.4byte	0xa34
+ 2283 0871 07       		.uleb128 0x7
+ 2284 0872 1E060000 		.4byte	.LVL124
+ 2285 0876 3F0A0000 		.4byte	0xa3f
+ 2286 087a 0B       		.uleb128 0xb
+ 2287 087b 36060000 		.4byte	.LVL125
+ 2288 087f 4A0A0000 		.4byte	0xa4a
+ 2289 0883 8D080000 		.4byte	0x88d
+ 2290 0887 0C       		.uleb128 0xc
+ 2291 0888 01       		.uleb128 0x1
+ 2292 0889 50       		.byte	0x50
+ 2293 088a 01       		.uleb128 0x1
+ 2294 088b 30       		.byte	0x30
+ 2295 088c 00       		.byte	0
+ 2296 088d 0B       		.uleb128 0xb
+ 2297 088e 3C060000 		.4byte	.LVL126
+ 2298 0892 550A0000 		.4byte	0xa55
+ 2299 0896 A0080000 		.4byte	0x8a0
+ 2300 089a 0C       		.uleb128 0xc
+ 2301 089b 01       		.uleb128 0x1
+ 2302 089c 50       		.byte	0x50
+ 2303 089d 01       		.uleb128 0x1
+ 2304 089e 31       		.byte	0x31
+ 2305 089f 00       		.byte	0
+ 2306 08a0 0B       		.uleb128 0xb
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 47
+
+
+ 2307 08a1 56060000 		.4byte	.LVL127
+ 2308 08a5 4A0A0000 		.4byte	0xa4a
+ 2309 08a9 B3080000 		.4byte	0x8b3
+ 2310 08ad 0C       		.uleb128 0xc
+ 2311 08ae 01       		.uleb128 0x1
+ 2312 08af 50       		.byte	0x50
+ 2313 08b0 01       		.uleb128 0x1
+ 2314 08b1 31       		.byte	0x31
+ 2315 08b2 00       		.byte	0
+ 2316 08b3 0B       		.uleb128 0xb
+ 2317 08b4 5C060000 		.4byte	.LVL128
+ 2318 08b8 550A0000 		.4byte	0xa55
+ 2319 08bc C6080000 		.4byte	0x8c6
+ 2320 08c0 0C       		.uleb128 0xc
+ 2321 08c1 01       		.uleb128 0x1
+ 2322 08c2 50       		.byte	0x50
+ 2323 08c3 01       		.uleb128 0x1
+ 2324 08c4 30       		.byte	0x30
+ 2325 08c5 00       		.byte	0
+ 2326 08c6 0B       		.uleb128 0xb
+ 2327 08c7 74060000 		.4byte	.LVL129
+ 2328 08cb 4A0A0000 		.4byte	0xa4a
+ 2329 08cf D9080000 		.4byte	0x8d9
+ 2330 08d3 0C       		.uleb128 0xc
+ 2331 08d4 01       		.uleb128 0x1
+ 2332 08d5 50       		.byte	0x50
+ 2333 08d6 01       		.uleb128 0x1
+ 2334 08d7 31       		.byte	0x31
+ 2335 08d8 00       		.byte	0
+ 2336 08d9 0B       		.uleb128 0xb
+ 2337 08da 7A060000 		.4byte	.LVL130
+ 2338 08de 550A0000 		.4byte	0xa55
+ 2339 08e2 EC080000 		.4byte	0x8ec
+ 2340 08e6 0C       		.uleb128 0xc
+ 2341 08e7 01       		.uleb128 0x1
+ 2342 08e8 50       		.byte	0x50
+ 2343 08e9 01       		.uleb128 0x1
+ 2344 08ea 31       		.byte	0x31
+ 2345 08eb 00       		.byte	0
+ 2346 08ec 0B       		.uleb128 0xb
+ 2347 08ed 8E060000 		.4byte	.LVL131
+ 2348 08f1 4A0A0000 		.4byte	0xa4a
+ 2349 08f5 FF080000 		.4byte	0x8ff
+ 2350 08f9 0C       		.uleb128 0xc
+ 2351 08fa 01       		.uleb128 0x1
+ 2352 08fb 50       		.byte	0x50
+ 2353 08fc 01       		.uleb128 0x1
+ 2354 08fd 30       		.byte	0x30
+ 2355 08fe 00       		.byte	0
+ 2356 08ff 0B       		.uleb128 0xb
+ 2357 0900 94060000 		.4byte	.LVL132
+ 2358 0904 550A0000 		.4byte	0xa55
+ 2359 0908 12090000 		.4byte	0x912
+ 2360 090c 0C       		.uleb128 0xc
+ 2361 090d 01       		.uleb128 0x1
+ 2362 090e 50       		.byte	0x50
+ 2363 090f 01       		.uleb128 0x1
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 48
+
+
+ 2364 0910 30       		.byte	0x30
+ 2365 0911 00       		.byte	0
+ 2366 0912 07       		.uleb128 0x7
+ 2367 0913 A6060000 		.4byte	.LVL133
+ 2368 0917 340A0000 		.4byte	0xa34
+ 2369 091b 07       		.uleb128 0x7
+ 2370 091c B6060000 		.4byte	.LVL134
+ 2371 0920 3F0A0000 		.4byte	0xa3f
+ 2372 0924 00       		.byte	0
+ 2373 0925 0D       		.uleb128 0xd
+ 2374 0926 73010000 		.4byte	.LASF20
+ 2375 092a 05       		.byte	0x5
+ 2376 092b 1207     		.2byte	0x712
+ 2377 092d 31090000 		.4byte	0x931
+ 2378 0931 0E       		.uleb128 0xe
+ 2379 0932 76000000 		.4byte	0x76
+ 2380 0936 0F       		.uleb128 0xf
+ 2381 0937 D7010000 		.4byte	.LASF21
+ 2382 093b 01       		.byte	0x1
+ 2383 093c 09       		.byte	0x9
+ 2384 093d 8D000000 		.4byte	0x8d
+ 2385 0941 05       		.uleb128 0x5
+ 2386 0942 03       		.byte	0x3
+ 2387 0943 00000000 		.4byte	data_QAM
+ 2388 0947 10       		.uleb128 0x10
+ 2389 0948 746D7000 		.ascii	"tmp\000"
+ 2390 094c 01       		.byte	0x1
+ 2391 094d 0A       		.byte	0xa
+ 2392 094e 8D000000 		.4byte	0x8d
+ 2393 0952 05       		.uleb128 0x5
+ 2394 0953 03       		.byte	0x3
+ 2395 0954 00000000 		.4byte	tmp
+ 2396 0958 10       		.uleb128 0x10
+ 2397 0959 4E00     		.ascii	"N\000"
+ 2398 095b 01       		.byte	0x1
+ 2399 095c 0B       		.byte	0xb
+ 2400 095d 8D000000 		.4byte	0x8d
+ 2401 0961 05       		.uleb128 0x5
+ 2402 0962 03       		.byte	0x3
+ 2403 0963 00000000 		.4byte	N
+ 2404 0967 0F       		.uleb128 0xf
+ 2405 0968 15000000 		.4byte	.LASF22
+ 2406 096c 01       		.byte	0x1
+ 2407 096d 0C       		.byte	0xc
+ 2408 096e 81000000 		.4byte	0x81
+ 2409 0972 05       		.uleb128 0x5
+ 2410 0973 03       		.byte	0x3
+ 2411 0974 00000000 		.4byte	nbit
+ 2412 0978 0F       		.uleb128 0xf
+ 2413 0979 EF010000 		.4byte	.LASF23
+ 2414 097d 01       		.byte	0x1
+ 2415 097e 0D       		.byte	0xd
+ 2416 097f 81000000 		.4byte	0x81
+ 2417 0983 05       		.uleb128 0x5
+ 2418 0984 03       		.byte	0x3
+ 2419 0985 00000000 		.4byte	log2N
+ 2420 0989 10       		.uleb128 0x10
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 49
+
+
+ 2421 098a 7300     		.ascii	"s\000"
+ 2422 098c 01       		.byte	0x1
+ 2423 098d 0E       		.byte	0xe
+ 2424 098e 81000000 		.4byte	0x81
+ 2425 0992 05       		.uleb128 0x5
+ 2426 0993 03       		.byte	0x3
+ 2427 0994 00000000 		.4byte	s
+ 2428 0998 0F       		.uleb128 0xf
+ 2429 0999 83020000 		.4byte	.LASF24
+ 2430 099d 01       		.byte	0x1
+ 2431 099e 0F       		.byte	0xf
+ 2432 099f 81000000 		.4byte	0x81
+ 2433 09a3 05       		.uleb128 0x5
+ 2434 09a4 03       		.byte	0x3
+ 2435 09a5 00000000 		.4byte	xcoor
+ 2436 09a9 0F       		.uleb128 0xf
+ 2437 09aa 47000000 		.4byte	.LASF25
+ 2438 09ae 01       		.byte	0x1
+ 2439 09af 10       		.byte	0x10
+ 2440 09b0 81000000 		.4byte	0x81
+ 2441 09b4 05       		.uleb128 0x5
+ 2442 09b5 03       		.byte	0x3
+ 2443 09b6 00000000 		.4byte	ycoor
+ 2444 09ba 0F       		.uleb128 0xf
+ 2445 09bb 97010000 		.4byte	.LASF26
+ 2446 09bf 01       		.byte	0x1
+ 2447 09c0 11       		.byte	0x11
+ 2448 09c1 81000000 		.4byte	0x81
+ 2449 09c5 05       		.uleb128 0x5
+ 2450 09c6 03       		.byte	0x3
+ 2451 09c7 00000000 		.4byte	xlim
+ 2452 09cb 10       		.uleb128 0x10
+ 2453 09cc 756E6F00 		.ascii	"uno\000"
+ 2454 09d0 01       		.byte	0x1
+ 2455 09d1 12       		.byte	0x12
+ 2456 09d2 81000000 		.4byte	0x81
+ 2457 09d6 05       		.uleb128 0x5
+ 2458 09d7 03       		.byte	0x3
+ 2459 09d8 00000000 		.4byte	uno
+ 2460 09dc 11       		.uleb128 0x11
+ 2461 09dd E0010000 		.4byte	.LASF27
+ 2462 09e1 E0010000 		.4byte	.LASF27
+ 2463 09e5 06       		.byte	0x6
+ 2464 09e6 26       		.byte	0x26
+ 2465 09e7 11       		.uleb128 0x11
+ 2466 09e8 69020000 		.4byte	.LASF28
+ 2467 09ec 69020000 		.4byte	.LASF28
+ 2468 09f0 07       		.byte	0x7
+ 2469 09f1 2B       		.byte	0x2b
+ 2470 09f2 11       		.uleb128 0x11
+ 2471 09f3 5C020000 		.4byte	.LASF29
+ 2472 09f7 5C020000 		.4byte	.LASF29
+ 2473 09fb 08       		.byte	0x8
+ 2474 09fc 71       		.byte	0x71
+ 2475 09fd 11       		.uleb128 0x11
+ 2476 09fe 3B000000 		.4byte	.LASF30
+ 2477 0a02 3B000000 		.4byte	.LASF30
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 50
+
+
+ 2478 0a06 09       		.byte	0x9
+ 2479 0a07 92       		.byte	0x92
+ 2480 0a08 11       		.uleb128 0x11
+ 2481 0a09 B0010000 		.4byte	.LASF31
+ 2482 0a0d B0010000 		.4byte	.LASF31
+ 2483 0a11 0A       		.byte	0xa
+ 2484 0a12 33       		.byte	0x33
+ 2485 0a13 11       		.uleb128 0x11
+ 2486 0a14 F5010000 		.4byte	.LASF32
+ 2487 0a18 F5010000 		.4byte	.LASF32
+ 2488 0a1c 0B       		.byte	0xb
+ 2489 0a1d 33       		.byte	0x33
+ 2490 0a1e 11       		.uleb128 0x11
+ 2491 0a1f 58010000 		.4byte	.LASF33
+ 2492 0a23 58010000 		.4byte	.LASF33
+ 2493 0a27 08       		.byte	0x8
+ 2494 0a28 54       		.byte	0x54
+ 2495 0a29 11       		.uleb128 0x11
+ 2496 0a2a 63010000 		.4byte	.LASF34
+ 2497 0a2e 63010000 		.4byte	.LASF34
+ 2498 0a32 0C       		.byte	0xc
+ 2499 0a33 18       		.byte	0x18
+ 2500 0a34 11       		.uleb128 0x11
+ 2501 0a35 87010000 		.4byte	.LASF35
+ 2502 0a39 87010000 		.4byte	.LASF35
+ 2503 0a3d 0A       		.byte	0xa
+ 2504 0a3e 37       		.byte	0x37
+ 2505 0a3f 11       		.uleb128 0x11
+ 2506 0a40 30020000 		.4byte	.LASF36
+ 2507 0a44 30020000 		.4byte	.LASF36
+ 2508 0a48 0B       		.byte	0xb
+ 2509 0a49 37       		.byte	0x37
+ 2510 0a4a 11       		.uleb128 0x11
+ 2511 0a4b 00000000 		.4byte	.LASF37
+ 2512 0a4f 00000000 		.4byte	.LASF37
+ 2513 0a53 0D       		.byte	0xd
+ 2514 0a54 26       		.byte	0x26
+ 2515 0a55 11       		.uleb128 0x11
+ 2516 0a56 24000000 		.4byte	.LASF38
+ 2517 0a5a 24000000 		.4byte	.LASF38
+ 2518 0a5e 0E       		.byte	0xe
+ 2519 0a5f 26       		.byte	0x26
+ 2520 0a60 00       		.byte	0
+ 2521              		.section	.debug_abbrev,"",%progbits
+ 2522              	.Ldebug_abbrev0:
+ 2523 0000 01       		.uleb128 0x1
+ 2524 0001 11       		.uleb128 0x11
+ 2525 0002 01       		.byte	0x1
+ 2526 0003 25       		.uleb128 0x25
+ 2527 0004 0E       		.uleb128 0xe
+ 2528 0005 13       		.uleb128 0x13
+ 2529 0006 0B       		.uleb128 0xb
+ 2530 0007 03       		.uleb128 0x3
+ 2531 0008 0E       		.uleb128 0xe
+ 2532 0009 1B       		.uleb128 0x1b
+ 2533 000a 0E       		.uleb128 0xe
+ 2534 000b 55       		.uleb128 0x55
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 51
+
+
+ 2535 000c 17       		.uleb128 0x17
+ 2536 000d 11       		.uleb128 0x11
+ 2537 000e 01       		.uleb128 0x1
+ 2538 000f 10       		.uleb128 0x10
+ 2539 0010 17       		.uleb128 0x17
+ 2540 0011 00       		.byte	0
+ 2541 0012 00       		.byte	0
+ 2542 0013 02       		.uleb128 0x2
+ 2543 0014 24       		.uleb128 0x24
+ 2544 0015 00       		.byte	0
+ 2545 0016 0B       		.uleb128 0xb
+ 2546 0017 0B       		.uleb128 0xb
+ 2547 0018 3E       		.uleb128 0x3e
+ 2548 0019 0B       		.uleb128 0xb
+ 2549 001a 03       		.uleb128 0x3
+ 2550 001b 0E       		.uleb128 0xe
+ 2551 001c 00       		.byte	0
+ 2552 001d 00       		.byte	0
+ 2553 001e 03       		.uleb128 0x3
+ 2554 001f 16       		.uleb128 0x16
+ 2555 0020 00       		.byte	0
+ 2556 0021 03       		.uleb128 0x3
+ 2557 0022 0E       		.uleb128 0xe
+ 2558 0023 3A       		.uleb128 0x3a
+ 2559 0024 0B       		.uleb128 0xb
+ 2560 0025 3B       		.uleb128 0x3b
+ 2561 0026 0B       		.uleb128 0xb
+ 2562 0027 49       		.uleb128 0x49
+ 2563 0028 13       		.uleb128 0x13
+ 2564 0029 00       		.byte	0
+ 2565 002a 00       		.byte	0
+ 2566 002b 04       		.uleb128 0x4
+ 2567 002c 24       		.uleb128 0x24
+ 2568 002d 00       		.byte	0
+ 2569 002e 0B       		.uleb128 0xb
+ 2570 002f 0B       		.uleb128 0xb
+ 2571 0030 3E       		.uleb128 0x3e
+ 2572 0031 0B       		.uleb128 0xb
+ 2573 0032 03       		.uleb128 0x3
+ 2574 0033 08       		.uleb128 0x8
+ 2575 0034 00       		.byte	0
+ 2576 0035 00       		.byte	0
+ 2577 0036 05       		.uleb128 0x5
+ 2578 0037 16       		.uleb128 0x16
+ 2579 0038 00       		.byte	0
+ 2580 0039 03       		.uleb128 0x3
+ 2581 003a 0E       		.uleb128 0xe
+ 2582 003b 3A       		.uleb128 0x3a
+ 2583 003c 0B       		.uleb128 0xb
+ 2584 003d 3B       		.uleb128 0x3b
+ 2585 003e 05       		.uleb128 0x5
+ 2586 003f 49       		.uleb128 0x49
+ 2587 0040 13       		.uleb128 0x13
+ 2588 0041 00       		.byte	0
+ 2589 0042 00       		.byte	0
+ 2590 0043 06       		.uleb128 0x6
+ 2591 0044 2E       		.uleb128 0x2e
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 52
+
+
+ 2592 0045 01       		.byte	0x1
+ 2593 0046 3F       		.uleb128 0x3f
+ 2594 0047 19       		.uleb128 0x19
+ 2595 0048 03       		.uleb128 0x3
+ 2596 0049 0E       		.uleb128 0xe
+ 2597 004a 3A       		.uleb128 0x3a
+ 2598 004b 0B       		.uleb128 0xb
+ 2599 004c 3B       		.uleb128 0x3b
+ 2600 004d 0B       		.uleb128 0xb
+ 2601 004e 27       		.uleb128 0x27
+ 2602 004f 19       		.uleb128 0x19
+ 2603 0050 11       		.uleb128 0x11
+ 2604 0051 01       		.uleb128 0x1
+ 2605 0052 12       		.uleb128 0x12
+ 2606 0053 06       		.uleb128 0x6
+ 2607 0054 40       		.uleb128 0x40
+ 2608 0055 18       		.uleb128 0x18
+ 2609 0056 9742     		.uleb128 0x2117
+ 2610 0058 19       		.uleb128 0x19
+ 2611 0059 01       		.uleb128 0x1
+ 2612 005a 13       		.uleb128 0x13
+ 2613 005b 00       		.byte	0
+ 2614 005c 00       		.byte	0
+ 2615 005d 07       		.uleb128 0x7
+ 2616 005e 898201   		.uleb128 0x4109
+ 2617 0061 00       		.byte	0
+ 2618 0062 11       		.uleb128 0x11
+ 2619 0063 01       		.uleb128 0x1
+ 2620 0064 31       		.uleb128 0x31
+ 2621 0065 13       		.uleb128 0x13
+ 2622 0066 00       		.byte	0
+ 2623 0067 00       		.byte	0
+ 2624 0068 08       		.uleb128 0x8
+ 2625 0069 34       		.uleb128 0x34
+ 2626 006a 00       		.byte	0
+ 2627 006b 03       		.uleb128 0x3
+ 2628 006c 0E       		.uleb128 0xe
+ 2629 006d 3A       		.uleb128 0x3a
+ 2630 006e 0B       		.uleb128 0xb
+ 2631 006f 3B       		.uleb128 0x3b
+ 2632 0070 0B       		.uleb128 0xb
+ 2633 0071 49       		.uleb128 0x49
+ 2634 0072 13       		.uleb128 0x13
+ 2635 0073 02       		.uleb128 0x2
+ 2636 0074 17       		.uleb128 0x17
+ 2637 0075 00       		.byte	0
+ 2638 0076 00       		.byte	0
+ 2639 0077 09       		.uleb128 0x9
+ 2640 0078 2E       		.uleb128 0x2e
+ 2641 0079 00       		.byte	0
+ 2642 007a 3F       		.uleb128 0x3f
+ 2643 007b 19       		.uleb128 0x19
+ 2644 007c 03       		.uleb128 0x3
+ 2645 007d 0E       		.uleb128 0xe
+ 2646 007e 3A       		.uleb128 0x3a
+ 2647 007f 0B       		.uleb128 0xb
+ 2648 0080 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 53
+
+
+ 2649 0081 0B       		.uleb128 0xb
+ 2650 0082 11       		.uleb128 0x11
+ 2651 0083 01       		.uleb128 0x1
+ 2652 0084 12       		.uleb128 0x12
+ 2653 0085 06       		.uleb128 0x6
+ 2654 0086 40       		.uleb128 0x40
+ 2655 0087 18       		.uleb128 0x18
+ 2656 0088 9742     		.uleb128 0x2117
+ 2657 008a 19       		.uleb128 0x19
+ 2658 008b 00       		.byte	0
+ 2659 008c 00       		.byte	0
+ 2660 008d 0A       		.uleb128 0xa
+ 2661 008e 2E       		.uleb128 0x2e
+ 2662 008f 01       		.byte	0x1
+ 2663 0090 3F       		.uleb128 0x3f
+ 2664 0091 19       		.uleb128 0x19
+ 2665 0092 03       		.uleb128 0x3
+ 2666 0093 0E       		.uleb128 0xe
+ 2667 0094 3A       		.uleb128 0x3a
+ 2668 0095 0B       		.uleb128 0xb
+ 2669 0096 3B       		.uleb128 0x3b
+ 2670 0097 0B       		.uleb128 0xb
+ 2671 0098 27       		.uleb128 0x27
+ 2672 0099 19       		.uleb128 0x19
+ 2673 009a 49       		.uleb128 0x49
+ 2674 009b 13       		.uleb128 0x13
+ 2675 009c 8701     		.uleb128 0x87
+ 2676 009e 19       		.uleb128 0x19
+ 2677 009f 11       		.uleb128 0x11
+ 2678 00a0 01       		.uleb128 0x1
+ 2679 00a1 12       		.uleb128 0x12
+ 2680 00a2 06       		.uleb128 0x6
+ 2681 00a3 40       		.uleb128 0x40
+ 2682 00a4 18       		.uleb128 0x18
+ 2683 00a5 9742     		.uleb128 0x2117
+ 2684 00a7 19       		.uleb128 0x19
+ 2685 00a8 01       		.uleb128 0x1
+ 2686 00a9 13       		.uleb128 0x13
+ 2687 00aa 00       		.byte	0
+ 2688 00ab 00       		.byte	0
+ 2689 00ac 0B       		.uleb128 0xb
+ 2690 00ad 898201   		.uleb128 0x4109
+ 2691 00b0 01       		.byte	0x1
+ 2692 00b1 11       		.uleb128 0x11
+ 2693 00b2 01       		.uleb128 0x1
+ 2694 00b3 31       		.uleb128 0x31
+ 2695 00b4 13       		.uleb128 0x13
+ 2696 00b5 01       		.uleb128 0x1
+ 2697 00b6 13       		.uleb128 0x13
+ 2698 00b7 00       		.byte	0
+ 2699 00b8 00       		.byte	0
+ 2700 00b9 0C       		.uleb128 0xc
+ 2701 00ba 8A8201   		.uleb128 0x410a
+ 2702 00bd 00       		.byte	0
+ 2703 00be 02       		.uleb128 0x2
+ 2704 00bf 18       		.uleb128 0x18
+ 2705 00c0 9142     		.uleb128 0x2111
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 54
+
+
+ 2706 00c2 18       		.uleb128 0x18
+ 2707 00c3 00       		.byte	0
+ 2708 00c4 00       		.byte	0
+ 2709 00c5 0D       		.uleb128 0xd
+ 2710 00c6 34       		.uleb128 0x34
+ 2711 00c7 00       		.byte	0
+ 2712 00c8 03       		.uleb128 0x3
+ 2713 00c9 0E       		.uleb128 0xe
+ 2714 00ca 3A       		.uleb128 0x3a
+ 2715 00cb 0B       		.uleb128 0xb
+ 2716 00cc 3B       		.uleb128 0x3b
+ 2717 00cd 05       		.uleb128 0x5
+ 2718 00ce 49       		.uleb128 0x49
+ 2719 00cf 13       		.uleb128 0x13
+ 2720 00d0 3F       		.uleb128 0x3f
+ 2721 00d1 19       		.uleb128 0x19
+ 2722 00d2 3C       		.uleb128 0x3c
+ 2723 00d3 19       		.uleb128 0x19
+ 2724 00d4 00       		.byte	0
+ 2725 00d5 00       		.byte	0
+ 2726 00d6 0E       		.uleb128 0xe
+ 2727 00d7 35       		.uleb128 0x35
+ 2728 00d8 00       		.byte	0
+ 2729 00d9 49       		.uleb128 0x49
+ 2730 00da 13       		.uleb128 0x13
+ 2731 00db 00       		.byte	0
+ 2732 00dc 00       		.byte	0
+ 2733 00dd 0F       		.uleb128 0xf
+ 2734 00de 34       		.uleb128 0x34
+ 2735 00df 00       		.byte	0
+ 2736 00e0 03       		.uleb128 0x3
+ 2737 00e1 0E       		.uleb128 0xe
+ 2738 00e2 3A       		.uleb128 0x3a
+ 2739 00e3 0B       		.uleb128 0xb
+ 2740 00e4 3B       		.uleb128 0x3b
+ 2741 00e5 0B       		.uleb128 0xb
+ 2742 00e6 49       		.uleb128 0x49
+ 2743 00e7 13       		.uleb128 0x13
+ 2744 00e8 3F       		.uleb128 0x3f
+ 2745 00e9 19       		.uleb128 0x19
+ 2746 00ea 02       		.uleb128 0x2
+ 2747 00eb 18       		.uleb128 0x18
+ 2748 00ec 00       		.byte	0
+ 2749 00ed 00       		.byte	0
+ 2750 00ee 10       		.uleb128 0x10
+ 2751 00ef 34       		.uleb128 0x34
+ 2752 00f0 00       		.byte	0
+ 2753 00f1 03       		.uleb128 0x3
+ 2754 00f2 08       		.uleb128 0x8
+ 2755 00f3 3A       		.uleb128 0x3a
+ 2756 00f4 0B       		.uleb128 0xb
+ 2757 00f5 3B       		.uleb128 0x3b
+ 2758 00f6 0B       		.uleb128 0xb
+ 2759 00f7 49       		.uleb128 0x49
+ 2760 00f8 13       		.uleb128 0x13
+ 2761 00f9 3F       		.uleb128 0x3f
+ 2762 00fa 19       		.uleb128 0x19
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 55
+
+
+ 2763 00fb 02       		.uleb128 0x2
+ 2764 00fc 18       		.uleb128 0x18
+ 2765 00fd 00       		.byte	0
+ 2766 00fe 00       		.byte	0
+ 2767 00ff 11       		.uleb128 0x11
+ 2768 0100 2E       		.uleb128 0x2e
+ 2769 0101 00       		.byte	0
+ 2770 0102 3F       		.uleb128 0x3f
+ 2771 0103 19       		.uleb128 0x19
+ 2772 0104 3C       		.uleb128 0x3c
+ 2773 0105 19       		.uleb128 0x19
+ 2774 0106 6E       		.uleb128 0x6e
+ 2775 0107 0E       		.uleb128 0xe
+ 2776 0108 03       		.uleb128 0x3
+ 2777 0109 0E       		.uleb128 0xe
+ 2778 010a 3A       		.uleb128 0x3a
+ 2779 010b 0B       		.uleb128 0xb
+ 2780 010c 3B       		.uleb128 0x3b
+ 2781 010d 0B       		.uleb128 0xb
+ 2782 010e 00       		.byte	0
+ 2783 010f 00       		.byte	0
+ 2784 0110 00       		.byte	0
+ 2785              		.section	.debug_loc,"",%progbits
+ 2786              	.Ldebug_loc0:
+ 2787              	.LLST0:
+ 2788 0000 06000000 		.4byte	.LVL2
+ 2789 0004 16000000 		.4byte	.LVL3
+ 2790 0008 0100     		.2byte	0x1
+ 2791 000a 50       		.byte	0x50
+ 2792 000b 16000000 		.4byte	.LVL3
+ 2793 000f 1C000000 		.4byte	.LVL4
+ 2794 0013 0500     		.2byte	0x5
+ 2795 0015 03       		.byte	0x3
+ 2796 0016 00000000 		.4byte	log2N
+ 2797 001a 00000000 		.4byte	0
+ 2798 001e 00000000 		.4byte	0
+ 2799              		.section	.debug_aranges,"",%progbits
+ 2800 0000 34000000 		.4byte	0x34
+ 2801 0004 0200     		.2byte	0x2
+ 2802 0006 00000000 		.4byte	.Ldebug_info0
+ 2803 000a 04       		.byte	0x4
+ 2804 000b 00       		.byte	0
+ 2805 000c 0000     		.2byte	0
+ 2806 000e 0000     		.2byte	0
+ 2807 0010 00000000 		.4byte	.LFB63
+ 2808 0014 A0000000 		.4byte	.LFE63-.LFB63
+ 2809 0018 00000000 		.4byte	.LFB64
+ 2810 001c 28000000 		.4byte	.LFE64-.LFB64
+ 2811 0020 00000000 		.4byte	.LFB66
+ 2812 0024 44000000 		.4byte	.LFE66-.LFB66
+ 2813 0028 00000000 		.4byte	.LFB65
+ 2814 002c CC060000 		.4byte	.LFE65-.LFB65
+ 2815 0030 00000000 		.4byte	0
+ 2816 0034 00000000 		.4byte	0
+ 2817              		.section	.debug_ranges,"",%progbits
+ 2818              	.Ldebug_ranges0:
+ 2819 0000 00000000 		.4byte	.LFB63
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 56
+
+
+ 2820 0004 A0000000 		.4byte	.LFE63
+ 2821 0008 00000000 		.4byte	.LFB64
+ 2822 000c 28000000 		.4byte	.LFE64
+ 2823 0010 00000000 		.4byte	.LFB66
+ 2824 0014 44000000 		.4byte	.LFE66
+ 2825 0018 00000000 		.4byte	.LFB65
+ 2826 001c CC060000 		.4byte	.LFE65
+ 2827 0020 00000000 		.4byte	0
+ 2828 0024 00000000 		.4byte	0
+ 2829              		.section	.debug_line,"",%progbits
+ 2830              	.Ldebug_line0:
+ 2831 0000 66030000 		.section	.debug_str,"MS",%progbits,1
+ 2831      0200B001 
+ 2831      00000201 
+ 2831      FB0E0D00 
+ 2831      01010101 
+ 2832              	.LASF37:
+ 2833 0000 7369676E 		.ascii	"signX_Write\000"
+ 2833      585F5772 
+ 2833      69746500 
+ 2834              	.LASF18:
+ 2835 000c 69737231 		.ascii	"isr1_clk\000"
+ 2835      5F636C6B 
+ 2835      00
+ 2836              	.LASF22:
+ 2837 0015 6E626974 		.ascii	"nbit\000"
+ 2837      00
+ 2838              	.LASF9:
+ 2839 001a 5F5F696E 		.ascii	"__int32_t\000"
+ 2839      7433325F 
+ 2839      7400
+ 2840              	.LASF38:
+ 2841 0024 7369676E 		.ascii	"signY_Write\000"
+ 2841      595F5772 
+ 2841      69746500 
+ 2842              	.LASF43:
+ 2843 0030 696E6974 		.ascii	"initialize\000"
+ 2843      69616C69 
+ 2843      7A6500
+ 2844              	.LASF30:
+ 2845 003b 434C4F43 		.ascii	"CLOCK_Start\000"
+ 2845      4B5F5374 
+ 2845      61727400 
+ 2846              	.LASF25:
+ 2847 0047 79636F6F 		.ascii	"ycoor\000"
+ 2847      7200
+ 2848              	.LASF13:
+ 2849 004d 666C6F61 		.ascii	"float\000"
+ 2849      7400
+ 2850              	.LASF41:
+ 2851 0053 433A5C55 		.ascii	"C:\\Users\\julians\\Documents\\PSoC Creator\\NQAM\\"
+ 2851      73657273 
+ 2851      5C6A756C 
+ 2851      69616E73 
+ 2851      5C446F63 
+ 2852 0080 51414D2E 		.ascii	"QAM.cydsn\000"
+ 2852      63796473 
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 57
+
+
+ 2852      6E00
+ 2853              	.LASF1:
+ 2854 008a 756E7369 		.ascii	"unsigned char\000"
+ 2854      676E6564 
+ 2854      20636861 
+ 2854      7200
+ 2855              	.LASF39:
+ 2856 0098 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 2856      43313120 
+ 2856      352E342E 
+ 2856      31203230 
+ 2856      31363036 
+ 2857 00cb 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m3 -mthumb -g -O"
+ 2857      20726576 
+ 2857      6973696F 
+ 2857      6E203233 
+ 2857      37373135 
+ 2858 00fe 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 2858      66756E63 
+ 2858      74696F6E 
+ 2858      2D736563 
+ 2858      74696F6E 
+ 2859              	.LASF10:
+ 2860 0126 696E7433 		.ascii	"int32_t\000"
+ 2860      325F7400 
+ 2861              	.LASF5:
+ 2862 012e 6C6F6E67 		.ascii	"long unsigned int\000"
+ 2862      20756E73 
+ 2862      69676E65 
+ 2862      6420696E 
+ 2862      7400
+ 2863              	.LASF42:
+ 2864 0140 74656D70 		.ascii	"temp\000"
+ 2864      00
+ 2865              	.LASF3:
+ 2866 0145 73686F72 		.ascii	"short unsigned int\000"
+ 2866      7420756E 
+ 2866      7369676E 
+ 2866      65642069 
+ 2866      6E7400
+ 2867              	.LASF33:
+ 2868 0158 55415254 		.ascii	"UART_Start\000"
+ 2868      5F537461 
+ 2868      727400
+ 2869              	.LASF34:
+ 2870 0163 6973725F 		.ascii	"isr_clk_StartEx\000"
+ 2870      636C6B5F 
+ 2870      53746172 
+ 2870      74457800 
+ 2871              	.LASF20:
+ 2872 0173 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 2872      52784275 
+ 2872      66666572 
+ 2872      00
+ 2873              	.LASF14:
+ 2874 0180 646F7562 		.ascii	"double\000"
+ 2874      6C6500
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 58
+
+
+ 2875              	.LASF35:
+ 2876 0187 585F5365 		.ascii	"X_SetValue\000"
+ 2876      7456616C 
+ 2876      756500
+ 2877              	.LASF44:
+ 2878 0192 6D61696E 		.ascii	"main\000"
+ 2878      00
+ 2879              	.LASF26:
+ 2880 0197 786C696D 		.ascii	"xlim\000"
+ 2880      00
+ 2881              	.LASF12:
+ 2882 019c 75696E74 		.ascii	"uint16\000"
+ 2882      313600
+ 2883              	.LASF8:
+ 2884 01a3 756E7369 		.ascii	"unsigned int\000"
+ 2884      676E6564 
+ 2884      20696E74 
+ 2884      00
+ 2885              	.LASF31:
+ 2886 01b0 585F5374 		.ascii	"X_Start\000"
+ 2886      61727400 
+ 2887              	.LASF7:
+ 2888 01b8 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 2888      206C6F6E 
+ 2888      6720756E 
+ 2888      7369676E 
+ 2888      65642069 
+ 2889              	.LASF19:
+ 2890 01cf 69737232 		.ascii	"isr2_bl\000"
+ 2890      5F626C00 
+ 2891              	.LASF21:
+ 2892 01d7 64617461 		.ascii	"data_QAM\000"
+ 2892      5F51414D 
+ 2892      00
+ 2893              	.LASF27:
+ 2894 01e0 64617461 		.ascii	"data_out_Write\000"
+ 2894      5F6F7574 
+ 2894      5F577269 
+ 2894      746500
+ 2895              	.LASF23:
+ 2896 01ef 6C6F6732 		.ascii	"log2N\000"
+ 2896      4E00
+ 2897              	.LASF32:
+ 2898 01f5 595F5374 		.ascii	"Y_Start\000"
+ 2898      61727400 
+ 2899              	.LASF17:
+ 2900 01fd 73697A65 		.ascii	"sizetype\000"
+ 2900      74797065 
+ 2900      00
+ 2901              	.LASF6:
+ 2902 0206 6C6F6E67 		.ascii	"long long int\000"
+ 2902      206C6F6E 
+ 2902      6720696E 
+ 2902      7400
+ 2903              	.LASF40:
+ 2904 0214 6D61696E 		.ascii	"main.c\000"
+ 2904      2E6300
+ARM GAS  C:\Users\julians\AppData\Local\Temp\ccSQYQJc.s 			page 59
+
+
+ 2905              	.LASF15:
+ 2906 021b 63686172 		.ascii	"char\000"
+ 2906      00
+ 2907              	.LASF2:
+ 2908 0220 73686F72 		.ascii	"short int\000"
+ 2908      7420696E 
+ 2908      7400
+ 2909              	.LASF11:
+ 2910 022a 75696E74 		.ascii	"uint8\000"
+ 2910      3800
+ 2911              	.LASF36:
+ 2912 0230 595F5365 		.ascii	"Y_SetValue\000"
+ 2912      7456616C 
+ 2912      756500
+ 2913              	.LASF4:
+ 2914 023b 6C6F6E67 		.ascii	"long int\000"
+ 2914      20696E74 
+ 2914      00
+ 2915              	.LASF16:
+ 2916 0244 6C6F6E67 		.ascii	"long double\000"
+ 2916      20646F75 
+ 2916      626C6500 
+ 2917              	.LASF0:
+ 2918 0250 7369676E 		.ascii	"signed char\000"
+ 2918      65642063 
+ 2918      68617200 
+ 2919              	.LASF29:
+ 2920 025c 55415254 		.ascii	"UART_GetChar\000"
+ 2920      5F476574 
+ 2920      43686172 
+ 2920      00
+ 2921              	.LASF28:
+ 2922 0269 50696E5F 		.ascii	"Pin_in_clk_ClearInterrupt\000"
+ 2922      696E5F63 
+ 2922      6C6B5F43 
+ 2922      6C656172 
+ 2922      496E7465 
+ 2923              	.LASF24:
+ 2924 0283 78636F6F 		.ascii	"xcoor\000"
+ 2924      7200
+ 2925              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran
